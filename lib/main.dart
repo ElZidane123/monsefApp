@@ -14,10 +14,28 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+
       
-      home: const Scaffold(
+      
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Flutter Demo Home Page'),
+        ),
         body: Center(
-          child: Text('Hello, mpek'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Hello, World!',
+                style: TextStyle(fontSize: 24),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Welcome to Flutter.',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
         ),
       ),
     );
