@@ -17,11 +17,7 @@ class MyApp extends StatelessWidget {
       
       home: const Scaffold(
         body: Center(
-          child: Text('Hello, World!', style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),),
+          child: Text('Hello, mpek'),
         ),
       ),
     );
