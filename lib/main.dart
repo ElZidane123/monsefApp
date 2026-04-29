@@ -32,9 +32,9 @@ class MyApp extends StatelessWidget {
             ),
           ],
           title: Text(
-            'Flutter Demo Home Page',
+            'Monsef App',
             style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold),
+              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blueAccent),
           ),
         ),
 
@@ -67,6 +67,7 @@ class MyApp extends StatelessWidget {
               Text('Welcome to Flutter.', style: TextStyle(fontSize: 18)),
             ],
           ),
+
         ),
       ),
     );
