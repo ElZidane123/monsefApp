@@ -6,8 +6,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,14 +14,28 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const Scaffold(
+
+      
+      
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Flutter Demo Home Page'),
+        ),
         body: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text( 'Hello geal geol'),
+              Text(
+                'Hello, World!',
+                style: TextStyle(fontSize: 24),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Welcome to Flutter.',
+                style: TextStyle(fontSize: 18),
+              ),
             ],
           ),
-          
         ),
       ),
     );
