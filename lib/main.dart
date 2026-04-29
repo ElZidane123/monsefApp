@@ -17,7 +17,12 @@ class MyApp extends StatelessWidget {
       ),
       home: const Scaffold(
         body: Center(
-          child: Text('Hello, mpek'),
+          child: Column(
+            children: [
+              Text( 'Hello geal geol'),
+            ],
+          ),
+          
         ),
       ),
     );
