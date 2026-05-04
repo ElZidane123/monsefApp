@@ -12,7 +12,8 @@ import '../widgets/recent_transactions.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../service/app_routes.dart';
 import 'transaction_history_screen.dart';
-import 'wealth_investment_screen.dart';
+import 'analytics_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,9 +83,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case 1:
         return const TransactionHistoryScreen();
       case 2:
-        return const WealthInvestmentScreen();
+        return const AnalyticsScreen();
       case 3:
-        return _PlaceholderScreen(title: 'Profile', icon: Icons.person_outline_rounded);
+        return const ProfileScreen();
       default:
         return _HomeContent();
     }
@@ -166,51 +167,6 @@ class _HomeContent extends StatelessWidget {
   }
 }
 
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _PlaceholderScreen({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryAccent.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 36, color: AppTheme.primaryAccent),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.dmSans(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Coming soon...',
-            style: GoogleFonts.dmSans(
-              fontSize: 14,
-              color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _QuickActionsSheet extends StatelessWidget {
   final bool isDark;
@@ -224,12 +180,10 @@ class _QuickActionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      ('Transfer', Icons.send_rounded, const Color(0xFF2563EB), AppRoutes.transfer),
-      ('Scan QR', Icons.qr_code_scanner_rounded, const Color(0xFF7C3AED), AppRoutes.qrScan),
-      ('QR Saya', Icons.qr_code_rounded, const Color(0xFF059669), AppRoutes.qrShow),
+      ('Manual', Icons.edit_note_rounded, const Color(0xFF2563EB), AppRoutes.manualEntry),
+      ('Scan Struk', Icons.document_scanner_rounded, const Color(0xFF7C3AED), AppRoutes.qrScan),
+      ('Suara', Icons.mic_rounded, const Color(0xFF059669), AppRoutes.voiceNote),
       ('Riwayat', Icons.receipt_long_outlined, const Color(0xFFF59E0B), AppRoutes.history),
-      ('Investasi', Icons.pie_chart_outline_rounded, const Color(0xFFEF4444), AppRoutes.investment),
-      ('Profil', Icons.person_outline_rounded, const Color(0xFF64748B), ''),
     ];
 
     return Padding(

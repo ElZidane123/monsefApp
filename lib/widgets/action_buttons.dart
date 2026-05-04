@@ -14,17 +14,17 @@ class ActionButtons extends StatelessWidget {
         children: [
           Expanded(
             child: _ActionButton(
-              icon: Icons.send_rounded,
-              label: 'Transfer',
+              icon: Icons.edit_note_rounded,
+              label: 'Manual',
               color: AppTheme.primaryAccent,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.transfer),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.manualEntry),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _ActionButton(
-              icon: Icons.qr_code_scanner_rounded,
-              label: 'Scan QR',
+              icon: Icons.document_scanner_rounded,
+              label: 'Scan Struk',
               color: const Color(0xFF7C3AED),
               onTap: () => Navigator.pushNamed(context, AppRoutes.qrScan),
             ),
@@ -32,10 +32,10 @@ class ActionButtons extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _ActionButton(
-              icon: Icons.qr_code_rounded,
-              label: 'QR Saya',
+              icon: Icons.mic_rounded,
+              label: 'Suara',
               color: const Color(0xFF059669),
-              onTap: () => Navigator.pushNamed(context, AppRoutes.qrShow),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.voiceNote),
             ),
           ),
         ],

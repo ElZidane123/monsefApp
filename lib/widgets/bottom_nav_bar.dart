@@ -34,14 +34,14 @@ class AppBottomNavBar extends StatelessWidget {
             children: [
               _NavItem(
                 icon: Icons.grid_view_rounded,
-                label: 'Home',
+                label: 'Beranda',
                 isSelected: currentIndex == 0,
                 onTap: () => onTap(0),
                 isDark: isDark,
               ),
               _NavItem(
                 icon: Icons.receipt_long_outlined,
-                label: 'History',
+                label: 'Riwayat',
                 isSelected: currentIndex == 1,
                 onTap: () => onTap(1),
                 isDark: isDark,
@@ -49,15 +49,15 @@ class AppBottomNavBar extends StatelessWidget {
               // Center gap for FAB
               const Expanded(child: SizedBox()),
               _NavItem(
-                icon: Icons.payment,
-                label: 'Card',
+                icon: Icons.bar_chart_rounded,
+                label: 'Statistik',
                 isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
                 isDark: isDark,
               ),
               _NavItem(
                 icon: Icons.person_outline_rounded,
-                label: 'Profile',
+                label: 'Profil',
                 isSelected: currentIndex == 3,
                 onTap: () => onTap(3),
                 isDark: isDark,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import '../themes/app_themes.dart';
+import 'manual_entry_screen.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -57,39 +58,30 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   }
 
   void _showScanResult(String code) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => _ScanResultSheet(
-        code: code,
-        onClose: () {
-          Navigator.pop(ctx);
-          setState(() => _isScanned = false);
-          controller?.resumeCamera();
-        },
-        onPay: () {
-          Navigator.pop(ctx);
-          Navigator.pop(context);
-          // Navigate to transfer/pay with pre-filled data
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Sending payment to: $code',
-                  style: GoogleFonts.dmSans()),
-              backgroundColor: AppTheme.primaryAccent,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
-        },
+    // Attempt to parse QR code as a receipt
+    // In a real app this would use OCR or a standardized receipt QR format
+    // Here we'll simulate parsing:
+    double amount = 50000;
+    String title = "Struk Belanja";
+
+    if (code.startsWith('PAY:')) {
+      final parts = code.split(':');
+      if (parts.length >= 2) title = parts[1];
+      if (parts.length >= 3) amount = double.tryParse(parts[2]) ?? 50000;
+    } else {
+      title = code;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ManualEntryScreen(
+          initialTitle: title,
+          initialAmount: amount,
+          isExpense: true,
+        ),
       ),
-    ).then((_) {
-      if (_isScanned) {
-        setState(() => _isScanned = false);
-        controller?.resumeCamera();
-      }
-    });
+    );
   }
 
   @override
@@ -277,183 +269,3 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   }
 }
 
-class _ScanResultSheet extends StatelessWidget {
-  final String code;
-  final VoidCallback onClose;
-  final VoidCallback onPay;
-
-  const _ScanResultSheet({
-    required this.code,
-    required this.onClose,
-    required this.onPay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Try to parse as payment QR (format: "PAY:name:amount" or just a name)
-    String? name;
-    double? amount;
-    if (code.startsWith('PAY:')) {
-      final parts = code.split(':');
-      if (parts.length >= 2) name = parts[1];
-      if (parts.length >= 3) amount = double.tryParse(parts[2]);
-    } else {
-      name = code;
-    }
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111827),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryAccent.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.qr_code_2_rounded,
-                  color: AppTheme.primaryAccent, size: 32),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'QR Code Berhasil Dibaca',
-              style: GoogleFonts.dmSans(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white12),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.person_outline_rounded,
-                          color: Colors.white54, size: 16),
-                      const SizedBox(width: 8),
-                      Text('Penerima',
-                          style: GoogleFonts.dmSans(
-                              color: Colors.white54, fontSize: 12)),
-                      const Spacer(),
-                      Text(
-                        name ?? code,
-                        style: GoogleFonts.dmSans(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  if (amount != null) ...[
-                    const SizedBox(height: 8),
-                    const Divider(color: Colors.white12),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.attach_money_rounded,
-                            color: Colors.white54, size: 16),
-                        const SizedBox(width: 8),
-                        Text('Jumlah',
-                            style: GoogleFonts.dmSans(
-                                color: Colors.white54, fontSize: 12)),
-                        const Spacer(),
-                        Text(
-                          '\$${amount.toStringAsFixed(2)}',
-                          style: GoogleFonts.dmSans(
-                              color: AppTheme.accentGreen,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: onClose,
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Center(
-                        child: Text('Scan Ulang',
-                            style: GoogleFonts.dmSans(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: GestureDetector(
-                    onTap: onPay,
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryAccent.withOpacity(0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Bayar Sekarang',
-                          style: GoogleFonts.dmSans(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
