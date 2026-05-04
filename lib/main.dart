@@ -41,7 +41,7 @@ class _FintechAppState extends State<FintechApp> {
         ChangeNotifierProvider(create: (_) => AppProvider()),
       ],
       child: MaterialApp(
-        title: 'FinPulse',
+        title: 'Monsef',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme(),
         darkTheme: AppTheme.darkTheme(),
