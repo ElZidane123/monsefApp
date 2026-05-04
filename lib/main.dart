@@ -39,7 +39,6 @@ class _FintechAppState extends State<FintechApp> {
     return MaterialApp(
       title: 'Monsef',
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
