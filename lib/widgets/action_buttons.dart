@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../service/app_routes.dart';
 import '../themes/app_themes.dart';
 
 class ActionButtons extends StatelessWidget {
@@ -15,23 +16,26 @@ class ActionButtons extends StatelessWidget {
             child: _ActionButton(
               icon: Icons.send_rounded,
               label: 'Transfer',
-              onTap: () {},
+              color: AppTheme.primaryAccent,
+              onTap: () => Navigator.pushNamed(context, AppRoutes.transfer),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _ActionButton(
-              icon: Icons.payment_rounded,
-              label: 'Pay',
-              onTap: () {},
+              icon: Icons.qr_code_scanner_rounded,
+              label: 'Scan QR',
+              color: const Color(0xFF7C3AED),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.qrScan),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _ActionButton(
-              icon: Icons.add_card_rounded,
-              label: 'Add Funds',
-              onTap: () {},
+              icon: Icons.qr_code_rounded,
+              label: 'QR Saya',
+              color: const Color(0xFF059669),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.qrShow),
             ),
           ),
         ],
@@ -44,11 +48,13 @@ class _ActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color color;
 
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.color,
   });
 
   @override
@@ -67,7 +73,7 @@ class _ActionButtonState extends State<_ActionButton>
       vsync: this,
       duration: const Duration(milliseconds: 120),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.93).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -111,12 +117,12 @@ class _ActionButtonState extends State<_ActionButton>
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryAccent.withOpacity(0.1),
+                  color: widget.color.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   widget.icon,
-                  color: AppTheme.primaryAccent,
+                  color: widget.color,
                   size: 20,
                 ),
               ),
@@ -126,7 +132,9 @@ class _ActionButtonState extends State<_ActionButton>
                 style: GoogleFonts.dmSans(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                  color: isDark
+                      ? AppTheme.textDarkPrimary
+                      : AppTheme.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),

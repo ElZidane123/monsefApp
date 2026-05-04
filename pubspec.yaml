@@ -40,6 +40,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   amicons: ^1.0.1
   qr_code_scanner_plus: ^2.1.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
