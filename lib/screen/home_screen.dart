@@ -10,6 +10,7 @@ import '../widgets/linked_accounts.dart';
 import '../widgets/spending_insights.dart';
 import '../widgets/recent_transactions.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../service/app_routes.dart';
 import 'transaction_history_screen.dart';
 import 'wealth_investment_screen.dart';
 
@@ -125,7 +126,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (ctx) => _QuickActionsSheet(isDark: isDark),
+      builder: (ctx) => _QuickActionsSheet(
+        isDark: isDark,
+        onAction: (route) {
+          Navigator.pop(ctx);
+          if (route.isNotEmpty) {
+            Navigator.pushNamed(context, route);
+          }
+        },
+      ),
     );
   }
 }
@@ -205,17 +214,22 @@ class _PlaceholderScreen extends StatelessWidget {
 
 class _QuickActionsSheet extends StatelessWidget {
   final bool isDark;
+  final ValueChanged<String> onAction;
 
-  const _QuickActionsSheet({required this.isDark});
+  const _QuickActionsSheet({
+    required this.isDark,
+    required this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
     final actions = [
-      ('Send Money', Icons.send_rounded, const Color(0xFF2563EB)),
-      ('Pay Bills', Icons.receipt_outlined, const Color(0xFF7C3AED)),
-      ('Add Funds', Icons.add_card_rounded, const Color(0xFF059669)),
-      ('Request Money', Icons.request_page_outlined, const Color(0xFFF59E0B)),
-      ('Scan QR', Icons.qr_code_scanner_rounded, const Color(0xFFEF4444)),
+      ('Transfer', Icons.send_rounded, const Color(0xFF2563EB), AppRoutes.transfer),
+      ('Scan QR', Icons.qr_code_scanner_rounded, const Color(0xFF7C3AED), AppRoutes.qrScan),
+      ('QR Saya', Icons.qr_code_rounded, const Color(0xFF059669), AppRoutes.qrShow),
+      ('Riwayat', Icons.receipt_long_outlined, const Color(0xFFF59E0B), AppRoutes.history),
+      ('Investasi', Icons.pie_chart_outline_rounded, const Color(0xFFEF4444), AppRoutes.investment),
+      ('Profil', Icons.person_outline_rounded, const Color(0xFF64748B), ''),
     ];
 
     return Padding(
@@ -249,7 +263,7 @@ class _QuickActionsSheet extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             children: actions.map((a) {
               return GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => onAction(a.$4),
                 child: Container(
                   decoration: BoxDecoration(
                     color: a.$3.withOpacity(0.1),
@@ -279,4 +293,4 @@ class _QuickActionsSheet extends StatelessWidget {
       ),
     );
   }
-}
+}

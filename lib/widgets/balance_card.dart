@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
+import '../utils/currency_formatter.dart';
 
 class BalanceCard extends StatelessWidget {
   final UserModel user;
 
   const BalanceCard({super.key, required this.user});
 
-  String _formatBalance(double amount) {
-    return '\$${amount.toStringAsFixed(2).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    )}';
-  }
+  String _formatBalance(double amount) => CurrencyFormatter.format(amount);
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +72,7 @@ class BalanceCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total Balance',
+                      'Total Saldo',
                       style: GoogleFonts.dmSans(
                         color: Colors.white.withOpacity(0.65),
                         fontSize: 14,

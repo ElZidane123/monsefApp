@@ -32,7 +32,12 @@ class AccountModel {
   });
 
   String get displayName => '$name  ****$lastFourDigits';
-  String get shortBalance => '\$${balance.toStringAsFixed(2)}';
+  String get shortBalance {
+    if (balance >= 1000000000) return 'Rp ${(balance / 1000000000).toStringAsFixed(1)} M';
+    if (balance >= 1000000) return 'Rp ${(balance / 1000000).toStringAsFixed(1)} Jt';
+    if (balance >= 1000) return 'Rp ${(balance / 1000).toStringAsFixed(0)} Rb';
+    return 'Rp ${balance.toStringAsFixed(0)}';
+  }
 }
 
 class TransactionModel {
