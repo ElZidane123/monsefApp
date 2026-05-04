@@ -49,8 +49,8 @@ class AppBottomNavBar extends StatelessWidget {
               // Center gap for FAB
               const Expanded(child: SizedBox()),
               _NavItem(
-                icon: Icons.credit_card_outlined,
-                label: 'Cards',
+                icon: Icons.payment,
+                label: 'Card',
                 isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
                 isDark: isDark,

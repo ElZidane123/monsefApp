@@ -69,7 +69,7 @@ class _TransferScreenState extends State<TransferScreen> with TickerProviderStat
     context.read<AppProvider>().setTransferFrom(_selectedAccount!);
     context.read<AppProvider>().setTransferTo(_selectedContact);
     context.read<AppProvider>().setTransferAmount(amount);
-    Navigator.pushNamed(context, AppRoutes.review);
+    // Navigator.pushNamed(context, AppRoutes.review);
   }
 
   @override

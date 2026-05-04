@@ -10,6 +10,8 @@ import '../widgets/linked_accounts.dart';
 import '../widgets/spending_insights.dart';
 import '../widgets/recent_transactions.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'transaction_history_screen.dart';
+import 'wealth_investment_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -77,9 +79,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case 0:
         return _HomeContent();
       case 1:
-        return _PlaceholderScreen(title: 'Transaction History', icon: Icons.receipt_long_outlined);
+        return const TransactionHistoryScreen();
       case 2:
-        return _PlaceholderScreen(title: 'My Cards', icon: Icons.credit_card_outlined);
+        return const WealthInvestmentScreen();
       case 3:
         return _PlaceholderScreen(title: 'Profile', icon: Icons.person_outline_rounded);
       default:

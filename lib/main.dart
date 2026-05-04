@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:monsef/service/app_routes.dart';
+import 'provider/app_provider.dart';
 import 'themes/app_themes.dart';
-import 'screen/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,13 +36,19 @@ class _FintechAppState extends State<FintechApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FinPulse',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: _themeMode,
-      home: HomeScreen(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppProvider()),
+      ],
+      child: MaterialApp(
+        title: 'FinPulse',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme(),
+        darkTheme: AppTheme.darkTheme(),
+        themeMode: _themeMode,
+        initialRoute: AppRoutes.home,
+        onGenerateRoute: AppRoutes.generateRoute,
+      ),
     );
   }
 }
