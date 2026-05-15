@@ -4,6 +4,7 @@ import '../screen/transaction_history_screen.dart';
 import '../screen/qr_scanner_screen.dart';
 import '../screen/manual_entry_screen.dart';
 import '../screen/voice_note_screen.dart';
+import '../screen/profile_screen.dart';
 
 class AppRoutes {
   static const String home = '/';
@@ -12,7 +13,7 @@ class AppRoutes {
   static const String qrScan = '/qr/scan';
   static const String manualEntry = '/manual';
   static const String voiceNote = '/voice';
-
+  static const String profile = '/profile';
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
