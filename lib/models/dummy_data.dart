@@ -219,4 +219,28 @@ class DummyData {
     SpendingDataModel(label: 'Sab', amount: 950000),
     SpendingDataModel(label: 'Min', amount: 600000),
   ];
+
+  static const List<SavingsGoalModel> savingsGoals = [
+    SavingsGoalModel(
+      title: 'New MacBook Pro',
+      targetAmount: 35000000,
+      currentAmount: 12500000,
+      icon: '💻',
+      colorHex: 0xFF3B82F6,
+    ),
+    SavingsGoalModel(
+      title: 'Japan Trip 2025',
+      targetAmount: 50000000,
+      currentAmount: 32000000,
+      icon: '🗾',
+      colorHex: 0xFF10B981,
+    ),
+    SavingsGoalModel(
+      title: 'Emergency Fund',
+      targetAmount: 100000000,
+      currentAmount: 45000000,
+      icon: '🛡️',
+      colorHex: 0xFFF59E0B,
+    ),
+  ];
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../provider/app_provider.dart';
+import '../controllers/app_controller.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
 import '../widgets/shared_widgets.dart';
@@ -80,7 +80,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       status: TransactionStatus.completed,
     );
 
-    final success = await context.read<AppProvider>().addTransaction(newTx);
+    final success = await context.read<AppController>().addTransaction(newTx);
     if (success && mounted) {
       Navigator.pop(context);
     }
@@ -89,7 +89,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isLoading = context.watch<AppProvider>().isLoading;
+    final isLoading = context.watch<AppController>().isLoading;
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,

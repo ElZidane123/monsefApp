@@ -2,27 +2,37 @@ import 'package:flutter/material.dart';
 import "package:google_fonts/google_fonts.dart";
 
 class AppTheme {
-  // Brand Colors
-  static const Color primaryDark = Color(0xFF0D1B3E);
-  static const Color primaryMid = Color(0xFF1A3561);
-  static const Color primaryAccent = Color(0xFF2563EB);
+  // Brand Colors - Premium Fintech Palette
+  static const Color primaryDark = Color(0xFF0F172A);
+  static const Color primaryMid = Color(0xFF1E293B);
+  static const Color primaryAccent = Color(0xFF3B82F6); // Electric Blue
+  static const Color primaryGlow = Color(0xFF60A5FA);
+  
   static const Color accentGreen = Color(0xFF10B981);
-  static const Color accentBlue = Color(0xFF3B82F6);
+  static const Color accentRose = Color(0xFFF43F5E);
+  static const Color accentAmber = Color(0xFFF59E0B);
 
   // Light Mode Neutrals
-  static const Color bgLight = Color(0xFFF4F6FA);
+  static const Color bgLight = Color(0xFFF8FAFC);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textSecondary = Color(0xFF475569);
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color borderLight = Color(0xFFE2E8F0);
 
-  // Dark Mode
-  static const Color bgDark = Color(0xFF0A0F1E);
-  static const Color surfaceDark = Color(0xFF111827);
-  static const Color surfaceDark2 = Color(0xFF1F2937);
+  // Dark Mode - Deep Space Palette
+  static const Color bgDark = Color(0xFF020617);
+  static const Color surfaceDark = Color(0xFF0F172A);
+  static const Color surfaceDark2 = Color(0xFF1E293B);
   static const Color textDarkPrimary = Color(0xFFF8FAFC);
   static const Color textDarkSecondary = Color(0xFF94A3B8);
+  
+  // Glassmorphism helper
+  static Color glassColor(bool isDark) => isDark 
+      ? Colors.white.withOpacity(0.05) 
+      : Colors.white.withOpacity(0.7);
+  
+  static double glassBlur = 12.0;
 
   static ThemeData lightTheme() {
     return ThemeData(
@@ -78,7 +88,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceDark,
-        selectedItemColor: accentBlue,
+        selectedItemColor: primaryAccent,
         unselectedItemColor: textDarkSecondary,
         elevation: 0,
         type: BottomNavigationBarType.fixed,

@@ -14,6 +14,17 @@ class UserModel {
     required this.monthlyGrowth,
     required this.notificationCount,
   });
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      name: json['name'] ?? '',
+      greeting: json['greeting'] ?? '',
+      avatarInitials: json['avatarInitials'] ?? '',
+      totalBalance: (json['totalBalance'] ?? 0).toDouble(),
+      monthlyGrowth: (json['monthlyGrowth'] ?? 0).toDouble(),
+      notificationCount: json['notificationCount'] ?? 0,
+    );
+  }
 }
 
 class AccountModel {
@@ -30,6 +41,16 @@ class AccountModel {
     required this.balance,
     required this.lastFourDigits,
   });
+
+  factory AccountModel.fromJson(Map<String, dynamic> json) {
+    return AccountModel(
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      type: json['type'] ?? '',
+      balance: (json['balance'] ?? 0).toDouble(),
+      lastFourDigits: json['lastFourDigits'] ?? '',
+    );
+  }
 
   String get displayName => '$name  ****$lastFourDigits';
   String get shortBalance {
@@ -60,6 +81,30 @@ class TransactionModel {
     required this.iconEmoji,
     this.status = TransactionStatus.completed,
   });
+
+  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    return TransactionModel(
+      id: json['id'].toString(),
+      title: json['title'] ?? '',
+      category: json['category'] ?? '',
+      amount: (json['amount'] ?? 0).toDouble(),
+      isExpense: json['isExpense'] ?? true,
+      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
+      iconEmoji: json['iconEmoji'] ?? '💰',
+      status: _parseStatus(json['status']),
+    );
+  }
+
+  static TransactionStatus _parseStatus(String? status) {
+    switch (status) {
+      case 'pending':
+        return TransactionStatus.pending;
+      case 'failed':
+        return TransactionStatus.failed;
+      default:
+        return TransactionStatus.completed;
+    }
+  }
 }
 
 enum TransactionStatus { completed, pending, failed }
@@ -135,3 +180,21 @@ class SpendingDataModel {
     this.isHighlighted = false,
   });
 }
+
+class SavingsGoalModel {
+  final String title;
+  final double targetAmount;
+  final double currentAmount;
+  final String icon;
+  final int colorHex;
+
+  const SavingsGoalModel({
+    required this.title,
+    required this.targetAmount,
+    required this.currentAmount,
+    required this.icon,
+    required this.colorHex,
+  });
+
+  double get progress => (currentAmount / targetAmount).clamp(0.0, 1.0);
+}

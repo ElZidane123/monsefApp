@@ -1,16 +1,17 @@
-  import 'package:flutter/material.dart';
-  import 'package:google_fonts/google_fonts.dart';
-  import 'package:provider/provider.dart';
-  import '../themes/app_themes.dart';
-  import '../provider/app_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../themes/app_themes.dart';
+import '../controllers/app_controller.dart';
 
-  class ProfileScreen extends StatelessWidget {
-    const ProfileScreen({super.key});
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
-    @override
-    Widget build(BuildContext context) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final user = context.watch<AppProvider>().user;
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final user = context.watch<AppController>().user;
 
       return Scaffold(
         backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
@@ -70,6 +71,7 @@
                 
                 // Settings list
                 _buildSettingGroup(
+                  context,
                   isDark,
                   title: 'Pengaturan Akun',
                   items: [
@@ -82,6 +84,7 @@
                 const SizedBox(height: 24),
                 
                 _buildSettingGroup(
+                  context,
                   isDark,
                   title: 'Bantuan',
                   items: [
@@ -89,25 +92,32 @@
                     _SettingItem(icon: Icons.privacy_tip_outlined, label: 'Kebijakan Privasi'),
                   ],
                 ),
+
                 
                 const SizedBox(height: 32),
                 // Logout Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Keluar',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFEF4444),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.heavyImpact();
+                    _showLogoutDialog(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Keluar',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFEF4444),
+                          ),
                         ),
                       ),
                     ),
@@ -121,7 +131,7 @@
       );
     }
 
-    Widget _buildSettingGroup(bool isDark, {required String title, required List<_SettingItem> items}) {
+    Widget _buildSettingGroup(BuildContext context, bool isDark, {required String title, required List<_SettingItem> items}) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -158,6 +168,16 @@
                 return Column(
                   children: [
                     ListTile(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        if (item.onTap != null) {
+                          item.onTap!();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Fitur ${item.label} segera hadir!')),
+                          );
+                        }
+                      },
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                       leading: Container(
                         padding: const EdgeInsets.all(8),
@@ -185,6 +205,29 @@
             ),
           ),
         ],
+      );
+    }
+
+    void _showLogoutDialog(BuildContext context) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Keluar'),
+          content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                // Handle logout logic
+              },
+              child: const Text('Keluar', style: TextStyle(color: Color(0xFFEF4444))),
+            ),
+          ],
+        ),
       );
     }
   }

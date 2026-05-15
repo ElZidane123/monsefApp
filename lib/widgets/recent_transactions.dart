@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
 
+
 class RecentTransactions extends StatelessWidget {
   final List<TransactionModel> transactions;
+  final bool isLoading;
+  final VoidCallback? onSeeAll;
 
-  const RecentTransactions({super.key, required this.transactions});
+  const RecentTransactions({
+    super.key,
+    required this.transactions,
+    this.isLoading = false,
+    this.onSeeAll,
+  });
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -19,6 +29,10 @@ class RecentTransactions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (isLoading) {
+      return _buildSkeleton(isDark);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,7 +52,7 @@ class RecentTransactions extends StatelessWidget {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: onSeeAll,
                 child: Text(
                   'See All',
                   style: GoogleFonts.dmSans(
@@ -52,12 +66,35 @@ class RecentTransactions extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ...transactions.map((tx) => _TransactionTile(
-          transaction: tx,
-          isDark: isDark,
-          formattedDate: _formatDate(tx.date),
-        )),
+        ...transactions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final tx = entry.value;
+          return _TransactionTile(
+            transaction: tx,
+            isDark: isDark,
+            formattedDate: _formatDate(tx.date),
+          ).animate().fadeIn(delay: (index * 50).ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+        }),
       ],
+    );
+  }
+
+  Widget _buildSkeleton(bool isDark) {
+    return Shimmer.fromColors(
+      baseColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+      highlightColor: isDark ? Colors.white24 : Colors.black.withOpacity(0.01),
+      child: Column(
+        children: List.generate(3, (index) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        )),
+      ),
     );
   }
 }

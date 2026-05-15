@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart';
-import '../provider/app_provider.dart';
+import '../controllers/app_controller.dart';
 import '../themes/app_themes.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -69,7 +69,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final transactions = context.watch<AppProvider>().transactions;
+    final transactions = context.watch<AppController>().transactions;
     final filtered = _filtered(transactions);
     final grouped = _groupByDate(filtered);
     final groups = grouped.entries.toList();

@@ -5,8 +5,9 @@ import '../themes/app_themes.dart';
 
 class LinkedAccounts extends StatelessWidget {
   final List<AccountModel> accounts;
+  final VoidCallback? onViewAll;
 
-  const LinkedAccounts({super.key, required this.accounts});
+  const LinkedAccounts({super.key, required this.accounts, this.onViewAll});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class LinkedAccounts extends StatelessWidget {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: onViewAll,
                 child: Text(
                   'View All',
                   style: GoogleFonts.dmSans(

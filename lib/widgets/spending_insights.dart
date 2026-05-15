@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../models/dummy_data.dart';
 import '../themes/app_themes.dart';
@@ -27,53 +29,61 @@ class _SpendingInsightsState extends State<SpendingInsights> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.surfaceDark.withOpacity(0.8) : Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark ? Colors.white.withOpacity(0.05) : AppTheme.borderLight,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Spending Insights',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                    letterSpacing: -0.3,
+          ),
+          child: Stack(
+            children: [
+              // Glass effect if supported
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: const SizedBox.shrink(),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Spending Insights',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      _PeriodDropdown(
+                        value: _selectedPeriod,
+                        items: _periods,
+                        isDark: isDark,
+                        onChanged: (v) => setState(() => _selectedPeriod = v!),
+                      ),
+                    ],
                   ),
-                ),
-                _PeriodDropdown(
-                  value: _selectedPeriod,
-                  items: _periods,
-                  isDark: isDark,
-                  onChanged: (v) => setState(() => _selectedPeriod = v!),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _SpendingSummary(data: _currentData, isDark: isDark),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 160,
-              child: _SpendingBarChart(data: _currentData, isDark: isDark),
-            ),
-          ],
+                  const SizedBox(height: 8),
+                  _SpendingSummary(data: _currentData, isDark: isDark),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 160,
+                    child: _SpendingBarChart(data: _currentData, isDark: isDark),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0);
   }
 }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:monsef/service/app_routes.dart';
-import 'provider/app_provider.dart';
+import 'controllers/app_controller.dart';
 import 'themes/app_themes.dart';
 
 void main() {
@@ -38,7 +38,7 @@ class _FintechAppState extends State<FintechApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppProvider()),
+        ChangeNotifierProvider(create: (_) => AppController()..initializeData()),
       ],
       child: MaterialApp(
         title: 'Monsef',

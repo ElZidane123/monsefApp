@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/dummy_data.dart';
+import '../controllers/app_controller.dart';
 import '../themes/app_themes.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/balance_card.dart';
@@ -10,10 +10,12 @@ import '../widgets/linked_accounts.dart';
 import '../widgets/spending_insights.dart';
 import '../widgets/recent_transactions.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/savings_goals_widget.dart';
 import '../service/app_routes.dart';
 import 'transaction_history_screen.dart';
 import 'analytics_screen.dart';
 import 'profile_screen.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,7 +81,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildBody() {
     switch (_selectedNavIndex) {
       case 0:
-        return _HomeContent();
+        return _HomeContent(
+          onSeeAllTransactions: () => setState(() => _selectedNavIndex = 1),
+          onViewAllAccounts: () => _showNotImplemented(context, 'Akun'),
+          onViewAllGoals: () => _showNotImplemented(context, 'Goals'),
+        );
       case 1:
         return const TransactionHistoryScreen();
       case 2:
@@ -87,8 +93,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case 3:
         return const ProfileScreen();
       default:
-        return _HomeContent();
+        return _HomeContent(
+          onSeeAllTransactions: () => setState(() => _selectedNavIndex = 1),
+          onViewAllAccounts: () => _showNotImplemented(context, 'Akun'),
+          onViewAllGoals: () => _showNotImplemented(context, 'Goals'),
+        );
     }
+  }
+
+  void _showNotImplemented(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Fitur $feature segera hadir!')),
+    );
   }
 
   Widget _buildFAB() {
@@ -141,25 +157,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 }
 
 class _HomeContent extends StatelessWidget {
+  final VoidCallback onSeeAllTransactions;
+  final VoidCallback onViewAllAccounts;
+  final VoidCallback onViewAllGoals;
+
+  const _HomeContent({
+    required this.onSeeAllTransactions,
+    required this.onViewAllAccounts,
+    required this.onViewAllGoals,
+  });
+
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<AppController>();
+    final user = controller.user;
+    final transactions = controller.transactions;
+    final accounts = controller.accounts;
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-          DashboardHeader(user: DummyData.user),
+          DashboardHeader(user: user),
           const SizedBox(height: 20),
-          BalanceCard(user: DummyData.user),
+          BalanceCard(user: user),
           const SizedBox(height: 20),
           const ActionButtons(),
           const SizedBox(height: 24),
-          LinkedAccounts(accounts: DummyData.accounts),
+          SavingsGoalsWidget(
+            goals: controller.savingsGoals,
+            onViewAll: onViewAllGoals,
+          ),
+          const SizedBox(height: 24),
+          LinkedAccounts(
+            accounts: accounts,
+            onViewAll: onViewAllAccounts,
+          ),
           const SizedBox(height: 24),
           const SpendingInsights(),
           const SizedBox(height: 24),
-          RecentTransactions(transactions: DummyData.transactions),
+          RecentTransactions(
+            transactions: transactions,
+            isLoading: controller.isLoading,
+            onSeeAll: onSeeAllTransactions,
+          ),
           const SizedBox(height: 32),
         ],
       ),

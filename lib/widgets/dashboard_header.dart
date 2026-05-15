@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
 
@@ -77,7 +78,7 @@ class DashboardHeader extends StatelessWidget {
           // Notification Bell
           _NotificationBell(count: user.notificationCount, isDark: isDark),
         ],
-      ),
+      ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1, end: 0),
     );
   }
 }
