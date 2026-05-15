@@ -40,7 +40,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   amicons: ^1.0.1
   qr_code_scanner_plus: ^2.1.1
-  speech_to_text: ^6.6.1
+  speech_to_text: ^7.3.0
   permission_handler: ^11.3.0
 dev_dependencies:
   flutter_test:
