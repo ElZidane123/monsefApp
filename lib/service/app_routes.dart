@@ -5,8 +5,10 @@ import '../screen/qr_scanner_screen.dart';
 import '../screen/manual_entry_screen.dart';
 import '../screen/voice_note_screen.dart';
 import '../screen/profile_screen.dart';
+import '../screen/splash_screen.dart';
 
 class AppRoutes {
+  static const String splash = '/splash';
   static const String home = '/';
   static const String dashboard = '/dashboard';
   static const String history = '/history';
@@ -16,6 +18,8 @@ class AppRoutes {
   static const String profile = '/profile';
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
       case home:
       case dashboard:
         return MaterialPageRoute(builder: (_) => const HomeScreen());

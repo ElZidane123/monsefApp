@@ -46,7 +46,7 @@ class _FintechAppState extends State<FintechApp> {
         theme: AppTheme.lightTheme(),
         darkTheme: AppTheme.darkTheme(),
         themeMode: _themeMode,
-        initialRoute: AppRoutes.home,
+        initialRoute: AppRoutes.splash,
         onGenerateRoute: AppRoutes.generateRoute,
       ),
     );
