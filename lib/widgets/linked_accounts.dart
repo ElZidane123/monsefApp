@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
+import '../utils/currency_formatter.dart';
+import '../controllers/app_controller.dart';
 import '../utils/currency_formatter.dart';
 
 class LinkedAccounts extends StatelessWidget {
@@ -89,6 +92,10 @@ class _AccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => HapticFeedback.selectionClick(),
+      onLongPress: () {
+        HapticFeedback.heavyImpact();
+        _showDeleteDialog(context);
+      },
       child: Container(
         width: 158,
         padding: const EdgeInsets.all(16),
@@ -167,6 +174,49 @@ class _AccountCard extends StatelessWidget {
       ),
     );
   }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+        title: Text(
+          'Hapus Akun',
+          style: GoogleFonts.inter(
+            color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus akun "${account.name}"? Saldo utama akan menyesuaikan.',
+          style: GoogleFonts.inter(
+            color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: GoogleFonts.inter(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await context.read<AppController>().deleteAccount(account.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? 'Akun berhasil dihapus' : 'Gagal menghapus akun', style: GoogleFonts.inter(color: Colors.white)),
+                    backgroundColor: success ? AppTheme.income : AppTheme.accentRose,
+                  ),
+                );
+              }
+            },
+            child: Text('Hapus', style: GoogleFonts.inter(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _AddCard extends StatelessWidget {
@@ -178,9 +228,7 @@ class _AddCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fitur segera hadir!')),
-        );
+        _showAddAccountSheet(context, isDark);
       },
       child: Container(
         width: 110,
@@ -212,6 +260,143 @@ class _AddCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddAccountSheet(BuildContext context, bool isDark) {
+    final nameCtrl = TextEditingController();
+    final balanceCtrl = TextEditingController();
+    String selectedType = 'savings';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: StatefulBuilder(
+            builder: (ctx, setState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Tambah Akun / Kartu',
+                  style: GoogleFonts.inter(
+                    fontSize: 18, fontWeight: FontWeight.w700,
+                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(nameCtrl, 'Nama Akun (Misal: BCA)', isDark),
+                const SizedBox(height: 16),
+                _buildTextField(balanceCtrl, 'Saldo Awal (Rp)', isDark, isNumber: true),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.surfaceDark2 : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedType,
+                      isExpanded: true,
+                      dropdownColor: isDark ? AppTheme.surfaceDark2 : Colors.white,
+                      items: const [
+                        DropdownMenuItem(value: 'savings', child: Text('Tabungan')),
+                        DropdownMenuItem(value: 'checking', child: Text('Giro')),
+                        DropdownMenuItem(value: 'investment', child: Text('Investasi')),
+                      ],
+                      onChanged: (v) => setState(() => selectedType = v!),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () async {
+                      final name = nameCtrl.text.trim();
+                      final balance = double.tryParse(balanceCtrl.text.trim()) ?? 0;
+                      if (name.isEmpty) return;
+
+                      final data = {
+                        "id": "acc_${DateTime.now().millisecondsSinceEpoch}",
+                        "name": name,
+                        "type": selectedType,
+                        "balance": balance,
+                        "lastFourDigits": (DateTime.now().millisecondsSinceEpoch % 10000).toString().padLeft(4, '0')
+                      };
+                      
+                      final success = await context.read<AppController>().addAccount(data);
+                      if (context.mounted) {
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Akun berhasil ditambahkan!'), backgroundColor: AppTheme.income));
+                          Navigator.pop(ctx);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menambahkan akun'), backgroundColor: AppTheme.accentRose));
+                        }
+                      }
+                    },
+                    child: Text(
+                      'Simpan Akun',
+                      style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(TextEditingController ctrl, String hint, bool isDark, {bool isNumber = false}) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38),
+        filled: true,
+        fillColor: isDark ? AppTheme.surfaceDark2 : Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
         ),
       ),
     );

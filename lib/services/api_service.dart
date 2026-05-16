@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'api_config.dart';
 import '../models/models.dart';
 
@@ -15,167 +14,224 @@ class ApiException implements Exception {
 
 // ─── ApiService ───────────────────────────────────────────────────────────
 class ApiService {
-  final String _base = ApiConfig.baseUrl;
-  final Map<String, String> _headers = ApiConfig.headers;
+  late final Dio _dio;
+
+  ApiService() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: ApiConfig.connectTimeout,
+        receiveTimeout: const Duration(seconds: 15),
+        headers: ApiConfig.headers,
+        validateStatus: (status) => status != null && status < 500, // Let us handle errors
+      ),
+    );
+  }
 
   // ── Helper ──────────────────────────────────────────────────────────────
-  dynamic _extractData(http.Response res) {
-    dynamic body;
-    try {
-      body = json.decode(res.body);
-    } catch (_) {
-      if (res.statusCode >= 200 && res.statusCode < 300) return null;
-      throw ApiException('Invalid JSON response', res.statusCode);
-    }
-
-    if (res.statusCode >= 200 && res.statusCode < 300) {
+  dynamic _extractData(Response res) {
+    if (res.statusCode != null && res.statusCode! >= 200 && res.statusCode! < 300) {
+      final body = res.data;
       if (body is Map<String, dynamic> && body.containsKey('data')) {
         return body['data'];
       }
       return body;
     }
 
-    final message = (body is Map<String, dynamic> && body.containsKey('message'))
-        ? body['message']
-        : 'Request failed';
+    String message = 'Request failed';
+    if (res.data is Map<String, dynamic> && res.data.containsKey('message')) {
+      message = res.data['message'];
+    }
     throw ApiException(message, res.statusCode);
+  }
+
+  ApiException _handleError(dynamic e) {
+    if (e is ApiException) return e;
+    if (e is DioException) {
+      return ApiException(e.message ?? 'Network error', e.response?.statusCode);
+    }
+    return ApiException(e.toString());
+  }
+
+  // ── AUTHENTICATION ────────────────────────────────────────────────────────
+  Future<UserModel> login(String email, String password) async {
+    try {
+      final res = await _dio.get('/users', queryParameters: {'email': email, 'password': password});
+      final List data = _extractData(res);
+      if (data.isEmpty) {
+        throw ApiException('Email atau password salah', 401);
+      }
+      return UserModel.fromJson(data.first);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<UserModel> register(Map<String, dynamic> data) async {
+    try {
+      final res = await _dio.post('/users', data: data);
+      return UserModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   // ── PROFILE ─────────────────────────────────────────────────────────────
   Future<UserModel> getUserProfile() async {
-    final res = await http
-        .get(Uri.parse('$_base/profile'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    return UserModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.get('/profile');
+      return UserModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<UserModel> updateProfile(Map<String, dynamic> data) async {
-    final res = await http
-        .put(Uri.parse('$_base/profile'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return UserModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.put('/profile', data: data);
+      return UserModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   // ── ACCOUNTS ────────────────────────────────────────────────────────────
   Future<List<AccountModel>> getAccounts() async {
-    final res = await http
-        .get(Uri.parse('$_base/accounts'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    final List data = _extractData(res);
-    return data.map((e) => AccountModel.fromJson(e)).toList();
+    try {
+      final res = await _dio.get('/accounts');
+      final List data = _extractData(res);
+      return data.map((e) => AccountModel.fromJson(e)).toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<AccountModel> createAccount(Map<String, dynamic> data) async {
-    final res = await http
-        .post(Uri.parse('$_base/accounts'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return AccountModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.post('/accounts', data: data);
+      return AccountModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<AccountModel> updateAccount(String id, Map<String, dynamic> data) async {
-    final res = await http
-        .put(Uri.parse('$_base/accounts/$id'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return AccountModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.put('/accounts/$id', data: data);
+      return AccountModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<void> deleteAccount(String id) async {
-    final res = await http
-        .delete(Uri.parse('$_base/accounts/$id'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    _extractData(res);
+    try {
+      final res = await _dio.delete('/accounts/$id');
+      _extractData(res);
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   // ── TRANSACTIONS ────────────────────────────────────────────────────────
   Future<List<TransactionModel>> getTransactions() async {
-    final res = await http
-        .get(Uri.parse('$_base/transactions'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    final List data = _extractData(res);
-    return data.map((e) => TransactionModel.fromJson(e)).toList();
+    try {
+      final res = await _dio.get('/transactions');
+      final List data = _extractData(res);
+      return data.map((e) => TransactionModel.fromJson(e)).toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<TransactionModel> getTransaction(String id) async {
-    final res = await http
-        .get(Uri.parse('$_base/transactions/$id'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    return TransactionModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.get('/transactions/$id');
+      return TransactionModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<TransactionModel> createTransaction(Map<String, dynamic> data) async {
-    final res = await http
-        .post(Uri.parse('$_base/transactions'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return TransactionModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.post('/transactions', data: data);
+      return TransactionModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
-  Future<TransactionModel> updateTransaction(
-      String id, Map<String, dynamic> data) async {
-    final res = await http
-        .put(Uri.parse('$_base/transactions/$id'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return TransactionModel.fromJson(_extractData(res));
+  Future<TransactionModel> updateTransaction(String id, Map<String, dynamic> data) async {
+    try {
+      final res = await _dio.put('/transactions/$id', data: data);
+      return TransactionModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<void> deleteTransaction(String id) async {
-    final res = await http
-        .delete(Uri.parse('$_base/transactions/$id'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    _extractData(res);
+    try {
+      final res = await _dio.delete('/transactions/$id');
+      _extractData(res);
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   // ── SAVINGS GOALS ───────────────────────────────────────────────────────
   Future<List<SavingsGoalModel>> getSavingsGoals() async {
-    final res = await http
-        .get(Uri.parse('$_base/savings-goals'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    final List data = _extractData(res);
-    return data.map((e) => SavingsGoalModel.fromJson(e)).toList();
+    try {
+      final res = await _dio.get('/savings-goals');
+      final List data = _extractData(res);
+      return data.map((e) => SavingsGoalModel.fromJson(e)).toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<SavingsGoalModel> createSavingsGoal(Map<String, dynamic> data) async {
-    final res = await http
-        .post(Uri.parse('$_base/savings-goals'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return SavingsGoalModel.fromJson(_extractData(res));
+    try {
+      final res = await _dio.post('/savings-goals', data: data);
+      return SavingsGoalModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
-  Future<SavingsGoalModel> updateSavingsGoal(
-      String id, Map<String, dynamic> data) async {
-    final res = await http
-        .put(Uri.parse('$_base/savings-goals/$id'),
-            headers: _headers, body: json.encode(data))
-        .timeout(ApiConfig.connectTimeout);
-    return SavingsGoalModel.fromJson(_extractData(res));
+  Future<SavingsGoalModel> updateSavingsGoal(String id, Map<String, dynamic> data) async {
+    try {
+      final res = await _dio.put('/savings-goals/$id', data: data);
+      return SavingsGoalModel.fromJson(_extractData(res));
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<void> deleteSavingsGoal(String id) async {
-    final res = await http
-        .delete(Uri.parse('$_base/savings-goals/$id'), headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    _extractData(res);
+    try {
+      final res = await _dio.delete('/savings-goals/$id');
+      _extractData(res);
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   // ── SPENDING SUMMARY ────────────────────────────────────────────────────
-  Future<List<SpendingDataModel>> getSpendingSummary(
-      {String period = 'monthly'}) async {
-    final res = await http
-        .get(Uri.parse('$_base/spending/summary?period=$period'),
-            headers: _headers)
-        .timeout(ApiConfig.connectTimeout);
-    final List data = _extractData(res);
-    return data
-        .map((e) => SpendingDataModel(
-              label: e['label'],
-              amount: (e['amount'] as num).toDouble(),
-              isHighlighted: e['isHighlighted'] ?? false,
-            ))
-        .toList();
+  Future<List<SpendingDataModel>> getSpendingSummary({String period = 'monthly'}) async {
+    try {
+      final res = await _dio.get('/spending/summary', queryParameters: {'period': period});
+      final List data = _extractData(res);
+      return data
+          .map((e) => SpendingDataModel(
+                label: e['label'],
+                amount: (e['amount'] as num).toDouble(),
+                isHighlighted: e['isHighlighted'] ?? false,
+              ))
+          .toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../themes/app_themes.dart';
 import '../controllers/app_controller.dart';
+import '../models/models.dart';
 import '../utils/currency_formatter.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -74,48 +75,71 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
                       child: Column(
                         children: [
-                          // Avatar
-                          Container(
-                            width: 86,
-                            height: 86,
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.primaryGradient,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.25),
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      AppTheme.primaryAccent.withOpacity(0.45),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
+                          GestureDetector(
+                            onTap: () => _showEditProfileSheet(context, user, isDark),
+                            child: Column(
+                              children: [
+                                // Avatar
+                                Container(
+                                  width: 86,
+                                  height: 86,
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.primaryGradient,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.25),
+                                      width: 3,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.primaryAccent.withOpacity(0.45),
+                                        blurRadius: 24,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      Center(
+                                        child: Text(
+                                          user.avatarInitials,
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white,
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(color: AppTheme.surfaceDark2, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                                          child: const Icon(Icons.edit_rounded, size: 14, color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.85, 0.85)),
+                                const SizedBox(height: 14),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      user.name,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: -0.6,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.edit_rounded, size: 16, color: Colors.white70),
+                                  ],
                                 ),
                               ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                user.avatarInitials,
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          )
-                              .animate()
-                              .fadeIn(duration: 500.ms)
-                              .scale(begin: const Offset(0.85, 0.85)),
-                          const SizedBox(height: 14),
-                          Text(
-                            user.name,
-                            style: GoogleFonts.inter(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.6,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -493,6 +517,82 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditProfileSheet(BuildContext context, UserModel user, bool isDark) {
+    final nameCtrl = TextEditingController(text: user.name);
+    final greetingCtrl = TextEditingController(text: user.greeting);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (sheetCtx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom, left: 24, right: 24, top: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Edit Profil', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+                decoration: InputDecoration(hintText: 'Nama', filled: true, fillColor: isDark ? AppTheme.surfaceDark2 : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: greetingCtrl,
+                style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+                decoration: InputDecoration(hintText: 'Sapaan (Contoh: Selamat Pagi)', filled: true, fillColor: isDark ? AppTheme.surfaceDark2 : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () async {
+                  final name = nameCtrl.text.trim();
+                  final greeting = greetingCtrl.text.trim();
+                  if (name.isEmpty) return;
+
+                  final initials = name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join('').toUpperCase();
+
+                  final data = {
+                    "id": "user-1",
+                    "name": name,
+                    "greeting": greeting,
+                    "avatarInitials": initials,
+                    "totalBalance": user.totalBalance,
+                    "monthlyGrowth": user.monthlyGrowth,
+                    "notificationCount": user.notificationCount
+                  };
+                  
+                  final success = await context.read<AppController>().updateProfile(data);
+                  if (context.mounted) {
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Profil berhasil diperbarui!', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)), backgroundColor: AppTheme.income, behavior: SnackBarBehavior.floating),
+                      );
+                      Navigator.pop(sheetCtx);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Gagal memperbarui profil.', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)), backgroundColor: AppTheme.accentRose, behavior: SnackBarBehavior.floating),
+                      );
+                    }
+                  }
+                },
+                child: Text('Simpan Profil', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -6,6 +6,8 @@ import '../screen/manual_entry_screen.dart';
 import '../screen/voice_note_screen.dart';
 import '../screen/profile_screen.dart';
 import '../screen/splash_screen.dart';
+import '../screen/login_screen.dart';
+import '../screen/register_screen.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -16,10 +18,17 @@ class AppRoutes {
   static const String manualEntry = '/manual';
   static const String voiceNote = '/voice';
   static const String profile = '/profile';
+  static const String login = '/login';
+  static const String register = '/register';
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
+      case login:
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case register:
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case home:
       case dashboard:
         return MaterialPageRoute(builder: (_) => const HomeScreen());

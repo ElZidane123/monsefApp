@@ -122,6 +122,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         : await appCtrl.addTransaction(newTx);
 
     if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaksi Berhasil Disimpan!', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
+          backgroundColor: AppTheme.income,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       Navigator.pop(context);
     }
   }

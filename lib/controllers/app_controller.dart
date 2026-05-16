@@ -10,6 +10,7 @@ class AppController extends ChangeNotifier {
   List<TransactionModel> _transactions = [];
   List<AccountModel> _accounts = [];
   List<SavingsGoalModel> _savingsGoals = [];
+  bool _isLoggedIn = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -21,28 +22,108 @@ class AppController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
+  bool get isLoggedIn => _isLoggedIn;
 
-  // ─── Init / Refresh ──────────────────────────────────────────────────────
-  Future<void> initializeData() async {
+  // ─── AUTHENTICATION ──────────────────────────────────────────────────────
+  Future<bool> login(String email, String password) async {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final results = await Future.wait([
-        _api.getUserProfile(),
-        _api.getTransactions(),
-        _api.getAccounts(),
-        _api.getSavingsGoals(),
-      ]);
-      _user = results[0] as UserModel;
-      _transactions = results[1] as List<TransactionModel>;
-      _accounts = results[2] as List<AccountModel>;
-      _savingsGoals = results[3] as List<SavingsGoalModel>;
-      
-      // Recalculate total balance from the loaded accounts
-      _recalcBalance();
+      _user = await _api.login(email, password);
+      _isLoggedIn = true;
+      await _loadDashboardData();
+      return true;
     } catch (e) {
       _errorMessage = _friendlyError(e);
-      if (kDebugMode) print('[AppController] init error: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> register(String name, String email, String password) async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      final initials = name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join('').toUpperCase();
+      final data = {
+        "id": "user_${DateTime.now().millisecondsSinceEpoch}",
+        "name": name,
+        "email": email,
+        "password": password,
+        "greeting": "Halo",
+        "avatarInitials": initials,
+        "totalBalance": 0.0,
+        "monthlyGrowth": 0.0,
+        "notificationCount": 0
+      };
+      _user = await _api.register(data);
+      _isLoggedIn = true;
+      await _loadDashboardData();
+      return true;
+    } catch (e) {
+      _errorMessage = _friendlyError(e);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void logout() {
+    _isLoggedIn = false;
+    _user = null;
+    _transactions = [];
+    _accounts = [];
+    _savingsGoals = [];
+    notifyListeners();
+  }
+
+  // ─── Init / Refresh ──────────────────────────────────────────────────────
+  Future<void> initializeData() async {
+    if (!_isLoggedIn) return;
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      // Refresh profile data as well if needed
+      _user = await _api.getUserProfile();
+      await _loadDashboardData();
+    } catch (e) {
+      _errorMessage = _friendlyError(e);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> _loadDashboardData() async {
+    final results = await Future.wait([
+      _api.getTransactions(),
+      _api.getAccounts(),
+      _api.getSavingsGoals(),
+    ]);
+    _transactions = results[0] as List<TransactionModel>;
+    _accounts = results[1] as List<AccountModel>;
+    _savingsGoals = results[2] as List<SavingsGoalModel>;
+    _recalcBalance();
+  }
+
+  // ─── PROFILE CRUD ────────────────────────────────────────────────────────
+  Future<bool> updateProfile(Map<String, dynamic> data) async {
+    _setLoading(true);
+    try {
+      final updated = await _api.updateProfile(data);
+      _user = UserModel(
+        name: updated.name,
+        greeting: updated.greeting,
+        avatarInitials: updated.avatarInitials,
+        totalBalance: _user?.totalBalance ?? updated.totalBalance, // keep local calculated balance
+        monthlyGrowth: updated.monthlyGrowth,
+        notificationCount: updated.notificationCount,
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = _friendlyError(e);
+      return false;
     } finally {
       _setLoading(false);
     }
@@ -126,6 +207,7 @@ class AppController extends ChangeNotifier {
       await _api.createAccount(data);
       final newAccount = AccountModel.fromJson(data);
       _accounts = [..._accounts, newAccount];
+      _recalcBalance();
       return true;
     } catch (e) {
       _errorMessage = _friendlyError(e);
@@ -140,6 +222,7 @@ class AppController extends ChangeNotifier {
     try {
       await _api.deleteAccount(id);
       _accounts = _accounts.where((a) => a.id != id).toList();
+      _recalcBalance();
       return true;
     } catch (e) {
       _errorMessage = _friendlyError(e);

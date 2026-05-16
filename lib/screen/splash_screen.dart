@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../service/app_routes.dart';
 import '../themes/app_themes.dart';
+import '../controllers/app_controller.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,7 +25,11 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToHome() {
     Timer(const Duration(milliseconds: 3500), () {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        final isLoggedIn = context.read<AppController>().isLoggedIn;
+        Navigator.pushReplacementNamed(
+          context,
+          isLoggedIn ? AppRoutes.home : AppRoutes.login,
+        );
       }
     });
   }
