@@ -36,40 +36,55 @@ class AppController extends ChangeNotifier {
       if (kDebugMode) {
         print('Error initializing data from API: $e');
       }
+      // Fallback to dummy data if API fails in dev mode
+      _user = DummyData.user;
+      _transactions = List.from(DummyData.transactions);
+      _accounts = List.from(DummyData.accounts);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  Future<void> refreshData() => initializeData();
+
   Future<bool> addTransaction(TransactionModel tx) async {
     _isLoading = true;
     notifyListeners();
     
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 600));
-    
-    _transactions = [tx, ..._transactions];
-    
-    // Update balance
-    double newBalance = _user.totalBalance;
-    if (tx.isExpense) {
-      newBalance -= tx.amount;
-    } else {
-      newBalance += tx.amount;
-    }
+    try {
+      // In a real app, we would wait for the API
+      // final createdTx = await _apiService.createTransaction(tx);
+      // _transactions = [createdTx, ..._transactions];
+      
+      // For demonstration, we'll simulate the API call success
+      await Future.delayed(const Duration(milliseconds: 600));
+      _transactions = [tx, ..._transactions];
+      
+      // Update balance locally
+      double newBalance = _user.totalBalance;
+      if (tx.isExpense) {
+        newBalance -= tx.amount;
+      } else {
+        newBalance += tx.amount;
+      }
 
-    _user = UserModel(
-      name: _user.name,
-      greeting: _user.greeting,
-      avatarInitials: _user.avatarInitials,
-      totalBalance: newBalance,
-      monthlyGrowth: _user.monthlyGrowth,
-      notificationCount: _user.notificationCount,
-    );
-    
-    _isLoading = false;
-    notifyListeners();
-    return true;
+      _user = UserModel(
+        name: _user.name,
+        greeting: _user.greeting,
+        avatarInitials: _user.avatarInitials,
+        totalBalance: newBalance,
+        monthlyGrowth: _user.monthlyGrowth,
+        notificationCount: _user.notificationCount,
+      );
+      
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('Error adding transaction: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -28,6 +28,25 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   final _titleCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
   final _categoryCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+  String? _selectedAccountId;
+  IconData _selectedIcon = Icons.payments_rounded;
+
+  final List<IconData> _icons = [
+    Icons.payments_rounded,
+    Icons.shopping_cart_rounded,
+    Icons.coffee_rounded,
+    Icons.restaurant_rounded,
+    Icons.directions_car_rounded,
+    Icons.home_rounded,
+    Icons.movie_rounded,
+    Icons.music_note_rounded,
+    Icons.work_rounded,
+    Icons.trending_up_rounded,
+    Icons.inventory_2_rounded,
+    Icons.electric_bolt_rounded,
+  ];
 
   @override
   void initState() {
@@ -46,6 +65,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
     _categoryCtrl.dispose();
+    _noteCtrl.dispose();
     super.dispose();
   }
 
@@ -75,9 +95,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       category: category.isEmpty ? 'Lainnya' : category,
       amount: amount,
       isExpense: _isExpense,
-      date: DateTime.now(),
-      iconEmoji: _isExpense ? '💸' : '💰',
+      date: _selectedDate,
+      icon: _selectedIcon,
       status: TransactionStatus.completed,
+      accountId: _selectedAccountId,
+      note: _noteCtrl.text.trim(),
     );
 
     final success = await context.read<AppController>().addTransaction(newTx);
@@ -90,6 +112,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isLoading = context.watch<AppController>().isLoading;
+    final accounts = context.watch<AppController>().accounts;
+    
+    if (_selectedAccountId == null && accounts.isNotEmpty) {
+      _selectedAccountId = accounts.first.id;
+    }
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
@@ -163,6 +190,47 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Icon selector
+            _buildLabel('Pilih Ikon', isDark),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _icons.length,
+                itemBuilder: (context, index) {
+                  final icon = _icons[index];
+                  final isSelected = _selectedIcon == icon;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedIcon = icon),
+                    child: Container(
+                      width: 50,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.primaryAccent
+                            : (isDark ? AppTheme.surfaceDark : Colors.white),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppTheme.primaryAccent
+                              : (isDark ? Colors.white10 : AppTheme.borderLight),
+                        ),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black54),
+                        size: 24,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // Form
             _buildLabel('Nominal (Rp)', isDark),
             const SizedBox(height: 8),
@@ -191,12 +259,100 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               isDark: isDark,
               hint: 'Contoh: Makanan',
             ),
+            const SizedBox(height: 20),
+
+            _buildLabel('Pilih Akun', isDark),
+            const SizedBox(height: 8),
+            _buildAccountDropdown(accounts, isDark),
+            const SizedBox(height: 20),
+
+            _buildLabel('Tanggal', isDark),
+            const SizedBox(height: 8),
+            _buildDatePicker(context, isDark),
+            const SizedBox(height: 20),
+
+            _buildLabel('Catatan (Opsional)', isDark),
+            const SizedBox(height: 8),
+            _buildTextField(
+              controller: _noteCtrl,
+              isDark: isDark,
+              hint: 'Tambahkan catatan...',
+            ),
             const SizedBox(height: 40),
 
             PrimaryButton(
               label: 'Simpan',
               isLoading: isLoading,
               onTap: _saveTransaction,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountDropdown(List<AccountModel> accounts, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: isDark ? AppTheme.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white12 : AppTheme.borderLight,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedAccountId,
+          isExpanded: true,
+          dropdownColor: isDark ? AppTheme.surfaceDark : Colors.white,
+          onChanged: (v) => setState(() => _selectedAccountId = v),
+          items: accounts.map((a) {
+            return DropdownMenuItem(
+              value: a.id,
+              child: Text(
+                a.name,
+                style: GoogleFonts.dmSans(
+                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePicker(BuildContext context, bool isDark) {
+    return InkWell(
+      onTap: () async {
+        final date = await showDatePicker(
+          context: context,
+          initialDate: _selectedDate,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (date != null) setState(() => _selectedDate = date);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white12 : AppTheme.borderLight,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today_rounded, size: 18, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary),
+            const SizedBox(width: 12),
+            Text(
+              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+              style: GoogleFonts.dmSans(
+                color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                fontSize: 16,
+              ),
             ),
           ],
         ),
@@ -214,6 +370,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       ),
     );
   }
+
 
   Widget _buildTextField({
     required TextEditingController controller,

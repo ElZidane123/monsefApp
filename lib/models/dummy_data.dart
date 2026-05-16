@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'models.dart';
 
 class DummyData {
@@ -42,7 +43,7 @@ class DummyData {
       amount: 65000,
       isExpense: true,
       date: DateTime.now().subtract(const Duration(hours: 1, minutes: 19)),
-      iconEmoji: '☕',
+      icon: Icons.coffee_rounded,
       items: [
         TransactionItem(name: 'Caramel Macchiato', price: 55000, quantity: 1),
         TransactionItem(name: 'Butter Croissant', price: 10000, quantity: 1),
@@ -55,7 +56,7 @@ class DummyData {
       amount: 8500000,
       isExpense: false,
       date: DateTime.now().subtract(const Duration(hours: 6)),
-      iconEmoji: '💰',
+      icon: Icons.payments_rounded,
       items: [
         TransactionItem(name: 'Salary October 2024', price: 8500000, quantity: 1),
       ],
@@ -69,7 +70,7 @@ class DummyData {
       date: DateTime.now().subtract(
         const Duration(days: 1, hours: 7, minutes: 45),
       ),
-      iconEmoji: '🍎',
+      icon: Icons.shopping_bag_rounded,
       items: [
         TransactionItem(name: 'AirPods Pro 2', price: 3200000, quantity: 1),
       ],
@@ -83,7 +84,7 @@ class DummyData {
       date: DateTime.now().subtract(
         const Duration(days: 1, hours: 11, minutes: 30),
       ),
-      iconEmoji: '🚗',
+      icon: Icons.directions_car_rounded,
       items: [
         TransactionItem(name: 'Ride to Office', price: 45000, quantity: 1),
         TransactionItem(name: 'GrabFood Promo', price: 40000, quantity: 1),
@@ -96,7 +97,7 @@ class DummyData {
       amount: 4500000,
       isExpense: true,
       date: DateTime.now().subtract(const Duration(days: 1, hours: 9)),
-      iconEmoji: '🏠',
+      icon: Icons.home_rounded,
       items: [
         TransactionItem(name: 'Rent Payment - Oct', price: 4500000, quantity: 1),
       ],
@@ -108,7 +109,7 @@ class DummyData {
       amount: 65000,
       isExpense: true,
       date: DateTime(2024, 10, 24, 8, 30),
-      iconEmoji: '🎬',
+      icon: Icons.movie_rounded,
       status: TransactionStatus.completed,
       items: [
         TransactionItem(name: 'Premium Plan Subscription', price: 65000, quantity: 1),
@@ -121,7 +122,7 @@ class DummyData {
       amount: 450000,
       isExpense: true,
       date: DateTime(2024, 10, 24, 14, 15),
-      iconEmoji: '🛒',
+      icon: Icons.shopping_cart_rounded,
       items: [
         TransactionItem(name: 'Vegetables & Fruits', price: 120000, quantity: 1),
         TransactionItem(name: 'Chicken Breast', price: 80000, quantity: 2),
@@ -136,7 +137,7 @@ class DummyData {
       amount: 2500000,
       isExpense: false,
       date: DateTime(2024, 10, 23, 10, 0),
-      iconEmoji: '💼',
+      icon: Icons.work_rounded,
     ),
     TransactionModel(
       id: 't9',
@@ -145,7 +146,7 @@ class DummyData {
       amount: 59000,
       isExpense: true,
       date: DateTime(2024, 10, 22, 9, 0),
-      iconEmoji: '🎵',
+      icon: Icons.music_note_rounded,
     ),
     TransactionModel(
       id: 't10',
@@ -154,7 +155,7 @@ class DummyData {
       amount: 350000,
       isExpense: true,
       date: DateTime(2024, 10, 21, 11, 0),
-      iconEmoji: '⚡',
+      icon: Icons.electric_bolt_rounded,
     ),
     TransactionModel(
       id: 't11',
@@ -163,7 +164,7 @@ class DummyData {
       amount: 1200000,
       isExpense: false,
       date: DateTime(2024, 10, 20, 9, 0),
-      iconEmoji: '📈',
+      icon: Icons.trending_up_rounded,
     ),
     TransactionModel(
       id: 't12',
@@ -172,7 +173,7 @@ class DummyData {
       amount: 350000,
       isExpense: true,
       date: DateTime(2024, 10, 19, 15, 30),
-      iconEmoji: '📦',
+      icon: Icons.inventory_2_rounded,
     ),
   ];
 
@@ -189,7 +190,7 @@ class DummyData {
       ticker: 'AAPL',
       value: 45000000,
       changePercent: 1.42,
-      emoji: '🍎',
+      icon: Icons.apple_rounded,
       detail: '124 lembar',
     ),
     InvestmentAsset(
@@ -197,7 +198,7 @@ class DummyData {
       ticker: 'ETH',
       value: 165000000,
       changePercent: 5.86,
-      emoji: '⟠',
+      icon: Icons.currency_bitcoin_rounded, // Fallback for ETH
       detail: '4.0 unit',
     ),
     InvestmentAsset(
@@ -205,7 +206,7 @@ class DummyData {
       ticker: 'TSLA',
       value: 30000000,
       changePercent: -2.14,
-      emoji: '⚡',
+      icon: Icons.electric_car_rounded,
       detail: '8 lembar',
     ),
     InvestmentAsset(
@@ -213,7 +214,7 @@ class DummyData {
       ticker: 'BTC',
       value: 132000000,
       changePercent: 3.22,
-      emoji: '₿',
+      icon: Icons.currency_bitcoin_rounded,
       detail: '0.2 BTC',
     ),
     InvestmentAsset(
@@ -221,7 +222,7 @@ class DummyData {
       ticker: 'MSFT',
       value: 49000000,
       changePercent: 0.87,
-      emoji: '🪟',
+      icon: Icons.window_rounded,
       detail: '10 lembar',
     ),
   ];
@@ -251,21 +252,21 @@ class DummyData {
       title: 'New MacBook Pro',
       targetAmount: 35000000,
       currentAmount: 12500000,
-      icon: '💻',
+      icon: Icons.laptop_mac_rounded,
       colorHex: 0xFF3B82F6,
     ),
     SavingsGoalModel(
       title: 'Japan Trip 2025',
       targetAmount: 50000000,
       currentAmount: 32000000,
-      icon: '🗾',
+      icon: Icons.flight_takeoff_rounded,
       colorHex: 0xFF10B981,
     ),
     SavingsGoalModel(
       title: 'Emergency Fund',
       targetAmount: 100000000,
       currentAmount: 45000000,
-      icon: '🛡️',
+      icon: Icons.security_rounded,
       colorHex: 0xFFF59E0B,
     ),
   ];

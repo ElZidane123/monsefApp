@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
+import '../utils/currency_formatter.dart';
 import 'transaction_detail_sheet.dart';
 
 class RecentTransactions extends StatelessWidget {
@@ -44,7 +45,7 @@ class RecentTransactions extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recent Transactions',
+                'Transaksi Terakhir',
                 style: GoogleFonts.dmSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -57,7 +58,7 @@ class RecentTransactions extends StatelessWidget {
               GestureDetector(
                 onTap: onSeeAll,
                 child: Text(
-                  'See All',
+                  'Lihat Semua',
                   style: GoogleFonts.dmSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -173,9 +174,12 @@ class _TransactionTileState extends State<_TransactionTile> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
-                    child: Text(
-                      widget.transaction.iconEmoji,
-                      style: const TextStyle(fontSize: 22),
+                    child: Icon(
+                      widget.transaction.icon,
+                      color: widget.transaction.isExpense
+                          ? const Color(0xFFEF4444)
+                          : const Color(0xFF10B981),
+                      size: 24,
                     ),
                   ),
                 ),
@@ -215,7 +219,7 @@ class _TransactionTileState extends State<_TransactionTile> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${widget.transaction.isExpense ? '-' : '+'}\$${widget.transaction.amount.toStringAsFixed(2)}',
+                      '${widget.transaction.isExpense ? '-' : '+'} ${CurrencyFormatter.format(widget.transaction.amount)}',
                       style: GoogleFonts.dmSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

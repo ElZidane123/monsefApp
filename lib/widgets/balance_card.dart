@@ -106,20 +106,24 @@ class BalanceCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'TOTAL BALANCE',
-                                  style: GoogleFonts.dmSans(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1.5,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'TOTAL SALDO',
+                                    style: GoogleFonts.dmSans(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.5,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
+                                  const SizedBox(height: 8),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
                                       _formatBalance(user.totalBalance),
                                       style: GoogleFonts.dmSans(
                                         color: Colors.white,
@@ -127,12 +131,14 @@ class BalanceCard extends StatelessWidget {
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: -1,
                                       ),
-                                    )
-                                    .animate()
-                                    .fadeIn(duration: 800.ms)
-                                    .slideX(begin: -0.1),
-                              ],
+                                    ),
+                                  ).animate()
+                                   .fadeIn(duration: 800.ms)
+                                   .slideX(begin: -0.1),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 12),
                             _CardChip().animate().shimmer(
                               delay: 1.seconds,
                               duration: 1.5.seconds,
@@ -142,7 +148,8 @@ class BalanceCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _GrowthBadge(percentage: user.monthlyGrowth),
+                            Expanded(child: _GrowthBadge(percentage: user.monthlyGrowth)),
+                            const SizedBox(width: 8),
                             Text(
                               '•••• 4429',
                               style: GoogleFonts.dmSans(
@@ -253,12 +260,15 @@ class _GrowthBadge extends StatelessWidget {
                 size: 13,
               ),
               const SizedBox(width: 3),
-              Text(
-                '${percentage.abs()}% this month',
-                style: GoogleFonts.dmSans(
-                  color: const Color(0xFF10B981),
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  '${percentage.abs()}% bulan ini',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    color: const Color(0xFF10B981),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

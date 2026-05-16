@@ -25,7 +25,7 @@ class SavingsGoalsWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Savings Goals',
+                'Tujuan Menabung',
                 style: GoogleFonts.dmSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -36,7 +36,7 @@ class SavingsGoalsWidget extends StatelessWidget {
               GestureDetector(
                 onTap: onViewAll,
                 child: Text(
-                  'View All',
+                  'Lihat Semua',
                   style: GoogleFonts.dmSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -112,7 +112,11 @@ class _GoalCard extends StatelessWidget {
                 color: Color(goal.colorHex).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Text(goal.icon, style: const TextStyle(fontSize: 20)),
+              child: Icon(
+                goal.icon,
+                color: Color(goal.colorHex),
+                size: 20,
+              ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

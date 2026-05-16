@@ -54,7 +54,7 @@ class _SpendingInsightsState extends State<SpendingInsights> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Spending Insights',
+                        'Wawasan Pengeluaran',
                         style: GoogleFonts.dmSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -104,7 +104,7 @@ class _SpendingSummary extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '\$${total.toStringAsFixed(0)}',
+              'Rp ${total.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
               style: GoogleFonts.dmSans(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -132,7 +132,7 @@ class _SpendingSummary extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '\$${highest.amount.toStringAsFixed(0)}',
+              'Rp ${highest.amount.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
               style: GoogleFonts.dmSans(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -189,7 +189,7 @@ class _SpendingBarChartState extends State<_SpendingBarChart> {
             tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                '\$${widget.data[groupIndex].amount.toStringAsFixed(0)}',
+                'Rp ${widget.data[groupIndex].amount.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
                 GoogleFonts.dmSans(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,

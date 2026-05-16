@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
+import '../utils/currency_formatter.dart';
 
 class LinkedAccounts extends StatelessWidget {
   final List<AccountModel> accounts;
@@ -22,7 +23,7 @@ class LinkedAccounts extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Linked Accounts',
+                'Akun Terhubung',
                 style: GoogleFonts.dmSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -33,7 +34,7 @@ class LinkedAccounts extends StatelessWidget {
               GestureDetector(
                 onTap: onViewAll,
                 child: Text(
-                  'View All',
+                  'Lihat Semua',
                   style: GoogleFonts.dmSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -95,10 +96,7 @@ class _AccountCard extends StatelessWidget {
   }
 
   String _formatBalance(double amount) {
-    if (amount >= 1000) {
-      return '\$${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\$${amount.toStringAsFixed(0)}';
+    return CurrencyFormatter.compact(amount);
   }
 
   @override
@@ -149,13 +147,16 @@ class _AccountCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _formatBalance(account.balance),
-                style: GoogleFonts.dmSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                  letterSpacing: -0.5,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _formatBalance(account.balance),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 2),

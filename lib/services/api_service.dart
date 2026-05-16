@@ -37,4 +37,20 @@ class ApiService {
       throw Exception('Failed to load accounts');
     }
   }
+
+  Future<TransactionModel> createTransaction(TransactionModel tx) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/transactions'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(tx.toJson()),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body)['data'];
+      return TransactionModel.fromJson(data);
+    } else {
+      final error = json.decode(response.body)['message'] ?? 'Failed to create transaction';
+      throw Exception(error);
+    }
+  }
 }

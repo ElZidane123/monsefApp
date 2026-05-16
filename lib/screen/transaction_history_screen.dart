@@ -6,6 +6,7 @@ import '../controllers/app_controller.dart';
 import '../themes/app_themes.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/transaction_detail_sheet.dart';
+import '../utils/currency_formatter.dart';
 import 'package:flutter/services.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
@@ -79,7 +80,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
       appBar: FintechAppBar(
-        title: 'Transaction History',
+        title: 'Riwayat Transaksi',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -108,7 +109,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               onChanged: (v) => setState(() => _searchQuery = v),
               style: GoogleFonts.dmSans(fontSize: 14, color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Search merchants, categories...',
+                hintText: 'Cari merchant, kategori...',
                 hintStyle: GoogleFonts.dmSans(fontSize: 14, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textMuted),
                 prefixIcon: Icon(Icons.search_rounded, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textMuted, size: 20),
                 suffixIcon: _searchQuery.isNotEmpty
@@ -139,11 +140,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               children: [
                 _FilterChip(label: 'Date', icon: Icons.calendar_today_outlined, active: _sortBy == 'Date', onTap: () => setState(() => _sortBy = 'Date'), isDark: isDark),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Income', icon: Icons.arrow_downward_rounded, active: _activeFilter == 'Income', onTap: () => setState(() => _activeFilter = _activeFilter == 'Income' ? '' : 'Income'), isDark: isDark),
+                _FilterChip(label: 'Pemasukan', icon: Icons.arrow_downward_rounded, active: _activeFilter == 'Income', onTap: () => setState(() => _activeFilter = _activeFilter == 'Income' ? '' : 'Income'), isDark: isDark),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Expense', icon: Icons.arrow_upward_rounded, active: _activeFilter == 'Expense', onTap: () => setState(() => _activeFilter = _activeFilter == 'Expense' ? '' : 'Expense'), isDark: isDark),
+                _FilterChip(label: 'Pengeluaran', icon: Icons.arrow_upward_rounded, active: _activeFilter == 'Expense', onTap: () => setState(() => _activeFilter = _activeFilter == 'Expense' ? '' : 'Expense'), isDark: isDark),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Amount', icon: Icons.attach_money_rounded, active: _sortBy == 'Amount', onTap: () => setState(() => _sortBy = 'Amount'), isDark: isDark),
+                _FilterChip(label: 'Nominal', icon: Icons.attach_money_rounded, active: _sortBy == 'Amount', onTap: () => setState(() => _sortBy = 'Amount'), isDark: isDark),
               ],
             ),
           ),
@@ -158,7 +159,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       children: [
                         Icon(Icons.search_off_rounded, size: 48, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textMuted),
                         const SizedBox(height: 12),
-                        Text('No transactions found', style: GoogleFonts.dmSans(fontSize: 15, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary)),
+                        Text('Tidak ada transaksi ditemukan', style: GoogleFonts.dmSans(fontSize: 15, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary)),
                       ],
                     ),
                   )
@@ -284,7 +285,13 @@ class _TransactionTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                  child: Text(tx.iconEmoji, style: const TextStyle(fontSize: 20))),
+                  child: Icon(
+                    tx.icon,
+                    color: tx.isExpense
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF10B981),
+                    size: 22,
+                  )),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -312,7 +319,7 @@ class _TransactionTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${tx.isExpense ? '-' : '+'}\$${tx.amount.toStringAsFixed(2)}',
+                  '${tx.isExpense ? '-' : '+'} ${CurrencyFormatter.format(tx.amount)}',
                   style: GoogleFonts.dmSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

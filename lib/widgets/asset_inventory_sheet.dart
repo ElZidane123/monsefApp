@@ -121,12 +121,15 @@ class AssetInventorySheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        CurrencyFormatter.format(totalBalance),
-                        style: GoogleFonts.dmSans(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          CurrencyFormatter.format(totalBalance),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -236,12 +239,17 @@ class _AccountItem extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            CurrencyFormatter.format(account.balance),
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                CurrencyFormatter.format(account.balance),
+                style: GoogleFonts.dmSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                ),
+              ),
             ),
           ),
         ],

@@ -193,21 +193,29 @@ class _MonthlySummaryCard extends StatelessWidget {
                   child: Icon(statusIcon, color: statusColor, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Kesimpulan Keuangan',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                Expanded(
+                  child: Text(
+                    'Kesimpulan Keuangan',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  conclusion,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      conclusion,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -311,12 +319,15 @@ class _CategoryBreakdown extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        entry.key,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(

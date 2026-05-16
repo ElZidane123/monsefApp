@@ -107,9 +107,10 @@ class TransactionDetailSheet extends StatelessWidget {
             ),
           ),
           child: Center(
-            child: Text(
-              transaction.iconEmoji,
-              style: const TextStyle(fontSize: 32),
+            child: Icon(
+              transaction.icon,
+              color: transaction.isExpense ? AppTheme.accentRose : AppTheme.accentGreen,
+              size: 36,
             ),
           ),
         ),
