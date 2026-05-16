@@ -34,6 +34,24 @@ class AppTheme {
   
   static double glassBlur = 12.0;
 
+  // Premium Shadows
+  static List<BoxShadow> premiumShadow(bool isDark) => [
+    BoxShadow(
+      color: isDark ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.08),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  static BoxDecoration glassDecoration(bool isDark) => BoxDecoration(
+    color: glassColor(isDark),
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(
+      color: isDark ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.2),
+      width: 1.5,
+    ),
+  );
+
   static ThemeData lightTheme() {
     return ThemeData(
       useMaterial3: true,

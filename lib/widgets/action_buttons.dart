@@ -154,6 +154,7 @@ class _ActionButtonState extends State<_ActionButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -161,11 +162,11 @@ class _ActionButtonState extends State<_ActionButton>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 120),
+      duration: const Duration(milliseconds: 150),
     );
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
   }
 
@@ -184,54 +185,62 @@ class _ActionButtonState extends State<_ActionButton>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        _handleTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () {}, // ripple only
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          _handleTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: AnimatedScale(
+          scale: _isHovered ? 1.02 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: ScaleTransition(
+            scale: _scaleAnimation,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
                 color: isDark ? AppTheme.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
+                    color: widget.color.withOpacity(isDark ? 0.15 : 0.08),
+                    blurRadius: _isHovered ? 20 : 12,
+                    offset: Offset(0, _isHovered ? 6 : 4),
                   ),
                 ],
+                border: Border.all(
+                  color: _isHovered 
+                    ? widget.color.withOpacity(0.3) 
+                    : Colors.transparent,
+                  width: 1.5,
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 42,
-                    height: 42,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      color: widget.color.withOpacity(_isHovered ? 0.2 : 0.1),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       widget.icon,
                       color: widget.color,
-                      size: 20,
+                      size: 22,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Text(
                     widget.label,
                     style: GoogleFonts.dmSans(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: isDark
                           ? AppTheme.textDarkPrimary

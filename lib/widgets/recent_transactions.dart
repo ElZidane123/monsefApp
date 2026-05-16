@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
-
+import 'transaction_detail_sheet.dart';
 
 class RecentTransactions extends StatelessWidget {
   final List<TransactionModel> transactions;
@@ -47,7 +48,9 @@ class RecentTransactions extends StatelessWidget {
                 style: GoogleFonts.dmSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                  color: isDark
+                      ? AppTheme.textDarkPrimary
+                      : AppTheme.textPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -70,10 +73,13 @@ class RecentTransactions extends StatelessWidget {
           final index = entry.key;
           final tx = entry.value;
           return _TransactionTile(
-            transaction: tx,
-            isDark: isDark,
-            formattedDate: _formatDate(tx.date),
-          ).animate().fadeIn(delay: (index * 50).ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+                transaction: tx,
+                isDark: isDark,
+                formattedDate: _formatDate(tx.date),
+              )
+              .animate()
+              .fadeIn(delay: (index * 50).ms, duration: 400.ms)
+              .slideY(begin: 0.1, end: 0);
         }),
       ],
     );
@@ -84,22 +90,25 @@ class RecentTransactions extends StatelessWidget {
       baseColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
       highlightColor: isDark ? Colors.white24 : Colors.black.withOpacity(0.01),
       child: Column(
-        children: List.generate(3, (index) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Container(
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+        children: List.generate(
+          3,
+          (index) => Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
-        )),
+        ),
       ),
     );
   }
 }
 
-class _TransactionTile extends StatelessWidget {
+class _TransactionTile extends StatefulWidget {
   final TransactionModel transaction;
   final bool isDark;
   final String formattedDate;
@@ -111,79 +120,128 @@ class _TransactionTile extends StatelessWidget {
   });
 
   @override
+  State<_TransactionTile> createState() => _TransactionTileState();
+}
+
+class _TransactionTileState extends State<_TransactionTile> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Emoji icon
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  transaction.iconEmoji,
-                  style: const TextStyle(fontSize: 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            TransactionDetailSheet.show(context, widget.transaction);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: widget.isDark ? AppTheme.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(widget.isDark ? 0.2 : 0.04),
+                  blurRadius: _isHovered ? 16 : 8,
+                  offset: Offset(0, _isHovered ? 4 : 2),
                 ),
+              ],
+              border: Border.all(
+                color: _isHovered
+                    ? AppTheme.primaryAccent.withOpacity(0.3)
+                    : Colors.transparent,
+                width: 1.5,
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Title + Category
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.title,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+            child: Row(
+              children: [
+                // Emoji icon with background
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color:
+                        (widget.transaction.isExpense
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF10B981))
+                            .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.transaction.iconEmoji,
+                      style: const TextStyle(fontSize: 22),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${transaction.category} • $formattedDate',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 12,
-                      color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+                const SizedBox(width: 14),
 
-            // Amount
-            Text(
-              '${transaction.isExpense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
-              style: GoogleFonts.dmSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: transaction.isExpense
-                    ? const Color(0xFFEF4444)
-                    : const Color(0xFF10B981),
-                letterSpacing: -0.3,
-              ),
+                // Title + Category
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.transaction.title,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: widget.isDark
+                              ? AppTheme.textDarkPrimary
+                              : AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${widget.transaction.category} • ${widget.formattedDate}',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12.5,
+                          color: widget.isDark
+                              ? AppTheme.textDarkSecondary
+                              : AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Amount
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${widget.transaction.isExpense ? '-' : '+'}\$${widget.transaction.amount.toStringAsFixed(2)}',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: widget.transaction.isExpense
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF10B981),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Icon(
+                      widget.transaction.isExpense
+                          ? Icons.arrow_outward_rounded
+                          : Icons.call_received_rounded,
+                      size: 14,
+                      color:
+                          (widget.transaction.isExpense
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF10B981))
+                              .withOpacity(0.5),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

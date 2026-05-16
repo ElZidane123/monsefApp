@@ -43,6 +43,10 @@ class DummyData {
       isExpense: true,
       date: DateTime.now().subtract(const Duration(hours: 1, minutes: 19)),
       iconEmoji: '☕',
+      items: [
+        TransactionItem(name: 'Caramel Macchiato', price: 55000, quantity: 1),
+        TransactionItem(name: 'Butter Croissant', price: 10000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't2',
@@ -52,6 +56,9 @@ class DummyData {
       isExpense: false,
       date: DateTime.now().subtract(const Duration(hours: 6)),
       iconEmoji: '💰',
+      items: [
+        TransactionItem(name: 'Salary October 2024', price: 8500000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't3',
@@ -63,6 +70,9 @@ class DummyData {
         const Duration(days: 1, hours: 7, minutes: 45),
       ),
       iconEmoji: '🍎',
+      items: [
+        TransactionItem(name: 'AirPods Pro 2', price: 3200000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't4',
@@ -74,6 +84,10 @@ class DummyData {
         const Duration(days: 1, hours: 11, minutes: 30),
       ),
       iconEmoji: '🚗',
+      items: [
+        TransactionItem(name: 'Ride to Office', price: 45000, quantity: 1),
+        TransactionItem(name: 'GrabFood Promo', price: 40000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't5',
@@ -83,6 +97,9 @@ class DummyData {
       isExpense: true,
       date: DateTime.now().subtract(const Duration(days: 1, hours: 9)),
       iconEmoji: '🏠',
+      items: [
+        TransactionItem(name: 'Rent Payment - Oct', price: 4500000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't6',
@@ -93,6 +110,9 @@ class DummyData {
       date: DateTime(2024, 10, 24, 8, 30),
       iconEmoji: '🎬',
       status: TransactionStatus.completed,
+      items: [
+        TransactionItem(name: 'Premium Plan Subscription', price: 65000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't7',
@@ -102,6 +122,12 @@ class DummyData {
       isExpense: true,
       date: DateTime(2024, 10, 24, 14, 15),
       iconEmoji: '🛒',
+      items: [
+        TransactionItem(name: 'Vegetables & Fruits', price: 120000, quantity: 1),
+        TransactionItem(name: 'Chicken Breast', price: 80000, quantity: 2),
+        TransactionItem(name: 'Milk 2L', price: 35000, quantity: 1),
+        TransactionItem(name: 'Snacks & Soda', price: 135000, quantity: 1),
+      ],
     ),
     TransactionModel(
       id: 't8',

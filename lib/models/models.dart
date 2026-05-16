@@ -61,6 +61,20 @@ class AccountModel {
   }
 }
 
+class TransactionItem {
+  final String name;
+  final double price;
+  final int quantity;
+
+  const TransactionItem({
+    required this.name,
+    required this.price,
+    this.quantity = 1,
+  });
+
+  double get total => price * quantity;
+}
+
 class TransactionModel {
   final String id;
   final String title;
@@ -70,6 +84,7 @@ class TransactionModel {
   final DateTime date;
   final String iconEmoji;
   final TransactionStatus status;
+  final List<TransactionItem> items;
 
   const TransactionModel({
     required this.id,
@@ -80,6 +95,7 @@ class TransactionModel {
     required this.date,
     required this.iconEmoji,
     this.status = TransactionStatus.completed,
+    this.items = const [],
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -92,6 +108,14 @@ class TransactionModel {
       date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
       iconEmoji: json['iconEmoji'] ?? '💰',
       status: _parseStatus(json['status']),
+      items: (json['items'] as List?)
+              ?.map((i) => TransactionItem(
+                    name: i['name'],
+                    price: (i['price'] ?? 0).toDouble(),
+                    quantity: i['quantity'] ?? 1,
+                  ))
+              .toList() ??
+          [],
     );
   }
 

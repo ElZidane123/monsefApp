@@ -5,6 +5,8 @@ import '../models/models.dart';
 import '../controllers/app_controller.dart';
 import '../themes/app_themes.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/transaction_detail_sheet.dart';
+import 'package:flutter/services.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
@@ -254,63 +256,93 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight,
-              borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        TransactionDetailSheet.show(context, tx);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                  child: Text(tx.iconEmoji, style: const TextStyle(fontSize: 20))),
             ),
-            child: Center(child: Text(tx.iconEmoji, style: const TextStyle(fontSize: 20))),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(tx.title,
+                      style: GoogleFonts.dmSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppTheme.textDarkPrimary
+                              : AppTheme.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text('${tx.category} · ${_formatTime(tx.date)}',
+                      style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppTheme.textDarkSecondary
+                              : AppTheme.textSecondary)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(tx.title, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary)),
-                const SizedBox(height: 2),
-                Text('${tx.category} · ${_formatTime(tx.date)}', style: GoogleFonts.dmSans(fontSize: 12, color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary)),
+                Text(
+                  '${tx.isExpense ? '-' : '+'}\$${tx.amount.toStringAsFixed(2)}',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: tx.isExpense
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF10B981),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _statusColor(tx.status).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    tx.status.name.toUpperCase(),
+                    style: GoogleFonts.dmSans(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: _statusColor(tx.status),
+                        letterSpacing: 0.5),
+                  ),
+                ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${tx.isExpense ? '-' : '+'}\$${tx.amount.toStringAsFixed(2)}',
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: tx.isExpense ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _statusColor(tx.status).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  tx.status.name.toUpperCase(),
-                  style: GoogleFonts.dmSans(fontSize: 9, fontWeight: FontWeight.w700, color: _statusColor(tx.status), letterSpacing: 0.5),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

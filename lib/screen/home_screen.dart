@@ -16,6 +16,7 @@ import 'transaction_history_screen.dart';
 import 'analytics_screen.dart';
 import 'profile_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -174,38 +175,75 @@ class _HomeContent extends StatelessWidget {
     final transactions = controller.transactions;
     final accounts = controller.accounts;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          DashboardHeader(user: user),
-          const SizedBox(height: 20),
-          BalanceCard(user: user),
-          const SizedBox(height: 20),
-          const ActionButtons(),
-          const SizedBox(height: 24),
-          SavingsGoalsWidget(
-            goals: controller.savingsGoals,
-            onViewAll: onViewAllGoals,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = constraints.maxWidth > 600 ? 40.0 : 20.0;
+        final maxWidth = constraints.maxWidth > 1000 ? 1000.0 : constraints.maxWidth;
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  DashboardHeader(user: user)
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 100.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 20),
+                  BalanceCard(user: user)
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 200.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 20),
+                  const ActionButtons()
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 300.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 24),
+                  SavingsGoalsWidget(
+                    goals: controller.savingsGoals,
+                    onViewAll: onViewAllGoals,
+                  ).animate()
+                      .fadeIn(duration: 400.ms, delay: 400.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 24),
+                  LinkedAccounts(
+                    accounts: accounts,
+                    onViewAll: onViewAllAccounts,
+                  ).animate()
+                      .fadeIn(duration: 400.ms, delay: 500.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 24),
+                  const SpendingInsights()
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 600.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 24),
+                  RecentTransactions(
+                    transactions: transactions,
+                    isLoading: controller.isLoading,
+                    onSeeAll: onSeeAllTransactions,
+                  ).animate()
+                      .fadeIn(duration: 400.ms, delay: 700.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 24),
-          LinkedAccounts(
-            accounts: accounts,
-            onViewAll: onViewAllAccounts,
-          ),
-          const SizedBox(height: 24),
-          const SpendingInsights(),
-          const SizedBox(height: 24),
-          RecentTransactions(
-            transactions: transactions,
-            isLoading: controller.isLoading,
-            onSeeAll: onSeeAllTransactions,
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
+        );
+      },
     );
   }
 }

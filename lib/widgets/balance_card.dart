@@ -1,11 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
 import '../utils/currency_formatter.dart';
-
+import 'asset_inventory_sheet.dart';
 
 class BalanceCard extends StatelessWidget {
   final UserModel user;
@@ -20,119 +21,149 @@ class BalanceCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Container(
-          width: double.infinity,
-          height: 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.primaryAccent.withOpacity(0.85),
-                AppTheme.primaryDark.withOpacity(0.95),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            AssetInventorySheet.show(context);
+          },
+          child: Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: AppTheme.premiumShadow(isDark),
+              gradient: LinearGradient(
+                colors: [AppTheme.primaryAccent, AppTheme.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              // Glassmorphism layer
-              BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 1.5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Stack(
+                children: [
+                  // Glassmorphism overlay
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.12),
+                            Colors.white.withOpacity(0.01),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1.2,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
 
-              // Decorative abstract shapes
-              Positioned(
-                right: -30,
-                top: -30,
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppTheme.primaryAccent.withOpacity(0.3),
-                        Colors.transparent,
-                      ],
-                    ),
+                  // Animated Glow
+                  Positioned(
+                    right: -50,
+                    top: -50,
+                    child:
+                        Container(
+                              width: 250,
+                              height: 250,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    AppTheme.primaryAccent.withOpacity(0.4),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(
+                              begin: const Offset(0.8, 0.8),
+                              end: const Offset(1.2, 1.2),
+                              duration: 3.seconds,
+                            )
+                            .move(
+                              begin: const Offset(0, 0),
+                              end: const Offset(-20, 20),
+                              duration: 3.seconds,
+                            ),
                   ),
-                ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                  .scale(begin: const Offset(1,1), end: const Offset(1.2, 1.2), duration: 4.seconds),
-              ),
 
-              // Card Content
-              Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                  // Card Content
+                  Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'TOTAL BALANCE',
-                              style: GoogleFonts.dmSans(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.5,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'TOTAL BALANCE',
+                                  style: GoogleFonts.dmSans(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                      _formatBalance(user.totalBalance),
+                                      style: GoogleFonts.dmSans(
+                                        color: Colors.white,
+                                        fontSize: 36,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -1,
+                                      ),
+                                    )
+                                    .animate()
+                                    .fadeIn(duration: 800.ms)
+                                    .slideX(begin: -0.1),
+                              ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _formatBalance(user.totalBalance),
-                              style: GoogleFonts.dmSans(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -1,
-                              ),
-                            ).animate().fadeIn(duration: 800.ms).slideX(begin: -0.1),
+                            _CardChip().animate().shimmer(
+                              delay: 1.seconds,
+                              duration: 1.5.seconds,
+                            ),
                           ],
                         ),
-                        _CardChip(),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _GrowthBadge(percentage: user.monthlyGrowth),
-                        Text(
-                          '•••• 4429',
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 2,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _GrowthBadge(percentage: user.monthlyGrowth),
+                            Text(
+                              '•••• 4429',
+                              style: GoogleFonts.dmSans(
+                                color: Colors.white.withOpacity(0.6),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.95, 0.95));
+    ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.98, 0.98));
   }
 }
 
@@ -144,10 +175,7 @@ class _CardChip extends StatelessWidget {
       height: 38,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.amber.shade300,
-            Colors.amber.shade600,
-          ],
+          colors: [Colors.amber.shade300, Colors.amber.shade600],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -218,7 +246,9 @@ class _GrowthBadge extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                isPositive
+                    ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded,
                 color: const Color(0xFF10B981),
                 size: 13,
               ),
