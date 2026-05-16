@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
@@ -20,25 +19,22 @@ class RecentTransactions extends StatelessWidget {
     this.onSeeAll,
   });
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays == 1) return 'Yesterday';
-    return '${diff.inDays}d ago';
+  String _relativeDate(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inHours < 1) return '${diff.inMinutes}m lalu';
+    if (diff.inHours < 24) return '${diff.inHours}j lalu';
+    if (diff.inDays == 1) return 'Kemarin';
+    return '${diff.inDays} hari lalu';
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (isLoading) {
-      return _buildSkeleton(isDark);
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -46,12 +42,10 @@ class RecentTransactions extends StatelessWidget {
             children: [
               Text(
                 'Transaksi Terakhir',
-                style: GoogleFonts.dmSans(
-                  fontSize: 17,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppTheme.textDarkPrimary
-                      : AppTheme.textPrimary,
+                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -59,10 +53,10 @@ class RecentTransactions extends StatelessWidget {
                 onTap: onSeeAll,
                 child: Text(
                   'Lihat Semua',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryAccent,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.accent,
                   ),
                 ),
               ),
@@ -70,184 +64,155 @@ class RecentTransactions extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ...transactions.asMap().entries.map((entry) {
-          final index = entry.key;
-          final tx = entry.value;
-          return _TransactionTile(
-                transaction: tx,
-                isDark: isDark,
-                formattedDate: _formatDate(tx.date),
-              )
-              .animate()
-              .fadeIn(delay: (index * 50).ms, duration: 400.ms)
-              .slideY(begin: 0.1, end: 0);
-        }),
+
+        // List container
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: AppTheme.softShadow(isDark),
+            ),
+            child: Column(
+              children: transactions.asMap().entries.map((e) {
+                final isLast = e.key == transactions.length - 1;
+                return _TxTile(
+                  tx: e.value,
+                  isDark: isDark,
+                  date: _relativeDate(e.value.date),
+                  isLast: isLast,
+                ).animate().fadeIn(delay: (e.key * 50).ms, duration: 350.ms);
+              }).toList(),
+            ),
+          ),
+        ),
       ],
     );
   }
-
-  Widget _buildSkeleton(bool isDark) {
-    return Shimmer.fromColors(
-      baseColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-      highlightColor: isDark ? Colors.white24 : Colors.black.withOpacity(0.01),
-      child: Column(
-        children: List.generate(
-          3,
-          (index) => Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-class _TransactionTile extends StatefulWidget {
-  final TransactionModel transaction;
+class _TxTile extends StatefulWidget {
+  final TransactionModel tx;
   final bool isDark;
-  final String formattedDate;
+  final String date;
+  final bool isLast;
 
-  const _TransactionTile({
-    required this.transaction,
+  const _TxTile({
+    required this.tx,
     required this.isDark,
-    required this.formattedDate,
+    required this.date,
+    required this.isLast,
   });
 
   @override
-  State<_TransactionTile> createState() => _TransactionTileState();
+  State<_TxTile> createState() => _TxTileState();
 }
 
-class _TransactionTileState extends State<_TransactionTile> {
-  bool _isHovered = false;
+class _TxTileState extends State<_TxTile> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          onTap: () {
+    final isExpense = widget.tx.isExpense;
+    final amountColor = isExpense ? AppTheme.expense : AppTheme.income;
+
+    return Column(
+      children: [
+        GestureDetector(
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) {
+            setState(() => _pressed = false);
             HapticFeedback.lightImpact();
-            TransactionDetailSheet.show(context, widget.transaction);
+            TransactionDetailSheet.show(context, widget.tx);
           },
+          onTapCancel: () => setState(() => _pressed = false),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: widget.isDark ? AppTheme.surfaceDark : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(widget.isDark ? 0.2 : 0.04),
-                  blurRadius: _isHovered ? 16 : 8,
-                  offset: Offset(0, _isHovered ? 4 : 2),
-                ),
-              ],
-              border: Border.all(
-                color: _isHovered
-                    ? AppTheme.primaryAccent.withOpacity(0.3)
-                    : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                // Emoji icon with background
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color:
-                        (widget.transaction.isExpense
-                                ? const Color(0xFFEF4444)
-                                : const Color(0xFF10B981))
-                            .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
+            duration: const Duration(milliseconds: 100),
+            color: _pressed
+                ? (widget.isDark
+                    ? Colors.white.withOpacity(0.03)
+                    : Colors.black.withOpacity(0.02))
+                : Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: Row(
+                children: [
+                  // Icon container — subtle, monochrome tint
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: widget.isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : Colors.black.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
                     child: Icon(
-                      widget.transaction.icon,
-                      color: widget.transaction.isExpense
-                          ? const Color(0xFFEF4444)
-                          : const Color(0xFF10B981),
-                      size: 24,
+                      widget.tx.icon,
+                      size: 20,
+                      color: widget.isDark
+                          ? AppTheme.textDarkPrimary
+                          : AppTheme.textPrimary,
                     ),
                   ),
-                ),
-                const SizedBox(width: 14),
+                  const SizedBox(width: 14),
 
-                // Title + Category
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.transaction.title,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: widget.isDark
-                              ? AppTheme.textDarkPrimary
-                              : AppTheme.textPrimary,
+                  // Text
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.tx.title,
+                          style: GoogleFonts.inter(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w500,
+                            color: widget.isDark
+                                ? AppTheme.textDarkPrimary
+                                : AppTheme.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${widget.transaction.category} • ${widget.formattedDate}',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12.5,
-                          color: widget.isDark
-                              ? AppTheme.textDarkSecondary
-                              : AppTheme.textSecondary,
+                        const SizedBox(height: 3),
+                        Text(
+                          '${widget.tx.category} · ${widget.date}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: widget.isDark
+                                ? AppTheme.textDarkSecondary
+                                : AppTheme.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                // Amount
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${widget.transaction.isExpense ? '-' : '+'} ${CurrencyFormatter.format(widget.transaction.amount)}',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: widget.transaction.isExpense
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF10B981),
-                        letterSpacing: -0.5,
-                      ),
+                  // Amount
+                  Text(
+                    '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(widget.tx.amount)}',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: amountColor,
+                      letterSpacing: -0.3,
                     ),
-                    const SizedBox(height: 2),
-                    Icon(
-                      widget.transaction.isExpense
-                          ? Icons.arrow_outward_rounded
-                          : Icons.call_received_rounded,
-                      size: 14,
-                      color:
-                          (widget.transaction.isExpense
-                                  ? const Color(0xFFEF4444)
-                                  : const Color(0xFF10B981))
-                              .withOpacity(0.5),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
+        if (!widget.isLast)
+          Divider(
+            height: 1,
+            indent: 76,
+            endIndent: 18,
+            color: widget.isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.055),
+          ),
+      ],
     );
   }
 }

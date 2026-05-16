@@ -33,23 +33,34 @@ class FintechAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? GestureDetector(
               onTap: onBack ?? () => Navigator.of(context).pop(),
               child: Container(
-                margin: const EdgeInsets.all(8),
+                margin: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isDark ? AppTheme.surfaceDark : Colors.white,
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8)],
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.06)
+                        : AppTheme.borderLight,
+                  ),
+                  boxShadow: AppTheme.softShadow(isDark),
                 ),
-                child: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 16,
+                  color: isDark
+                      ? AppTheme.textDarkPrimary
+                      : AppTheme.textPrimary,
+                ),
               ),
             )
           : null,
       title: Text(
         title,
-        style: GoogleFonts.dmSans(
+        style: GoogleFonts.inter(
           fontSize: 17,
           fontWeight: FontWeight.w700,
           color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-          letterSpacing: -0.3,
+          letterSpacing: -0.4,
         ),
       ),
       actions: actions,
@@ -63,7 +74,7 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isLoading;
   final bool isEnabled;
-  final Color? color;
+  final LinearGradient? gradient;
 
   const PrimaryButton({
     super.key,
@@ -71,30 +82,31 @@ class PrimaryButton extends StatelessWidget {
     this.onTap,
     this.isLoading = false,
     this.isEnabled = true,
-    this.color,
+    this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     final active = isEnabled && !isLoading;
+    final grad = gradient ?? AppTheme.primaryGradient;
     return GestureDetector(
       onTap: active ? onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        height: 54,
+        height: 56,
         decoration: BoxDecoration(
-          gradient: active
-              ? LinearGradient(
-                  colors: [color ?? AppTheme.primaryAccent, (color ?? AppTheme.primaryAccent).withBlue(200)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: active ? null : Colors.grey.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(16),
+          gradient: active ? grad : null,
+          color: active ? null : Colors.grey.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: active
-              ? [BoxShadow(color: (color ?? AppTheme.primaryAccent).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 6))]
+              ? [
+                  BoxShadow(
+                    color: grad.colors.first.withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
               : null,
         ),
         child: Center(
@@ -102,15 +114,16 @@ class PrimaryButton extends StatelessWidget {
               ? const SizedBox(
                   width: 22,
                   height: 22,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2.5),
                 )
               : Text(
                   label,
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     color: active ? Colors.white : Colors.grey,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
+                    letterSpacing: 0.1,
                   ),
                 ),
         ),
@@ -133,19 +146,26 @@ class SecondaryButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 54,
+        height: 56,
         decoration: BoxDecoration(
           color: isDark ? AppTheme.surfaceDark2 : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.borderLight),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : AppTheme.borderLight,
+          ),
+          boxShadow: AppTheme.softShadow(isDark),
         ),
         child: Center(
           child: Text(
             label,
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
+            style: GoogleFonts.inter(
+              fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+              color: isDark
+                  ? AppTheme.textDarkPrimary
+                  : AppTheme.textPrimary,
             ),
           ),
         ),
@@ -186,7 +206,8 @@ class SectionHeader extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
-  const SectionHeader({super.key, required this.title, this.actionLabel, this.onAction});
+  const SectionHeader(
+      {super.key, required this.title, this.actionLabel, this.onAction});
 
   @override
   Widget build(BuildContext context) {
@@ -196,19 +217,32 @@ class SectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-            letterSpacing: -0.3,
+            color:
+                isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+            letterSpacing: -0.4,
           ),
         ),
         if (actionLabel != null)
           GestureDetector(
             onTap: onAction,
-            child: Text(
-              actionLabel!,
-              style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primaryAccent),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                actionLabel!,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryAccent,
+                ),
+              ),
             ),
           ),
       ],

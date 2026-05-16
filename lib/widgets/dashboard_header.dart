@@ -6,79 +6,79 @@ import '../themes/app_themes.dart';
 
 class DashboardHeader extends StatelessWidget {
   final UserModel user;
-
   const DashboardHeader({super.key, required this.user});
+
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Selamat Pagi';
+    if (h < 15) return 'Selamat Siang';
+    if (h < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
       child: Row(
         children: [
-          // Avatar
+          // Avatar — clean circle, single accent
           Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryAccent, Color(0xFF7C3AED)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppTheme.accent,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryAccent.withOpacity(0.35),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Center(
               child: Text(
                 user.avatarInitials,
-                style: GoogleFonts.dmSans(
+                style: GoogleFonts.inter(
                   color: Colors.white,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   fontSize: 15,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
-          // Greeting + Name
+          // Greeting + name
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user.greeting,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+                  _greeting(),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: isDark
+                        ? AppTheme.textDarkSecondary
+                        : AppTheme.textSecondary,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
                 Text(
                   user.name,
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                    letterSpacing: -0.3,
+                    color: isDark
+                        ? AppTheme.textDarkPrimary
+                        : AppTheme.textPrimary,
+                    letterSpacing: -0.4,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Notification Bell
+          // Notification bell — clean button
           _NotificationBell(count: user.notificationCount, isDark: isDark),
         ],
-      ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1, end: 0),
+      ).animate().fadeIn(duration: 400.ms),
     );
   }
 }
@@ -86,7 +86,6 @@ class DashboardHeader extends StatelessWidget {
 class _NotificationBell extends StatelessWidget {
   final int count;
   final bool isDark;
-
   const _NotificationBell({required this.count, required this.isDark});
 
   @override
@@ -94,37 +93,36 @@ class _NotificationBell extends StatelessWidget {
     return GestureDetector(
       onTap: () {},
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.surfaceDark2 : Colors.white,
+              color: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: AppTheme.softShadow(isDark),
             ),
             child: Icon(
               Icons.notifications_outlined,
-              size: 22,
+              size: 20,
               color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
             ),
           ),
           if (count > 0)
             Positioned(
-              top: 6,
-              right: 6,
+              top: 1,
+              right: 1,
               child: Container(
                 width: 10,
                 height: 10,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEF4444),
+                decoration: BoxDecoration(
+                  color: AppTheme.expense,
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? AppTheme.bgDark : AppTheme.bgLight,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),

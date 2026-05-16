@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../controllers/app_controller.dart';
 import '../themes/app_themes.dart';
 import '../widgets/dashboard_header.dart';
@@ -110,20 +111,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildFAB() {
     return Container(
-      width: 58,
-      height: 58,
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppTheme.primaryGradient,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryAccent.withOpacity(0.45),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: AppTheme.primaryAccent.withOpacity(0.5),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: AppTheme.accentPurple.withOpacity(0.2),
+            blurRadius: 40,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -131,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         onPressed: () => _showQuickActions(context),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
       ),
     );
   }
@@ -261,14 +263,46 @@ class _QuickActionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      ('Manual', Icons.edit_note_rounded, const Color(0xFF2563EB), AppRoutes.manualEntry),
-      ('Scan Struk', Icons.document_scanner_rounded, const Color(0xFF7C3AED), AppRoutes.qrScan),
-      ('Suara', Icons.mic_rounded, const Color(0xFF059669), AppRoutes.voiceNote),
-      ('Riwayat', Icons.receipt_long_outlined, const Color(0xFFF59E0B), AppRoutes.history),
+      (
+        label: 'Manual',
+        icon: Icons.edit_note_rounded,
+        gradient: AppTheme.primaryGradient,
+        glow: AppTheme.primaryAccent,
+        route: AppRoutes.manualEntry,
+        desc: 'Catat manual',
+      ),
+      (
+        label: 'Scan Struk',
+        icon: Icons.document_scanner_rounded,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF9B59F4), Color(0xFF6C3CE1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        glow: AppTheme.accentPurple,
+        route: AppRoutes.qrScan,
+        desc: 'Scan nota',
+      ),
+      (
+        label: 'Suara',
+        icon: Icons.mic_rounded,
+        gradient: AppTheme.greenGradient,
+        glow: AppTheme.accentGreen,
+        route: AppRoutes.voiceNote,
+        desc: 'Input suara',
+      ),
+      (
+        label: 'Riwayat',
+        icon: Icons.receipt_long_rounded,
+        gradient: AppTheme.roseGradient,
+        glow: AppTheme.accentRose,
+        route: AppRoutes.history,
+        desc: 'Lihat semua',
+      ),
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -281,41 +315,85 @@ class _QuickActionsSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
+          Row(
+            children: [
+              Text(
+                'Tambah Transaksi',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
           Text(
-            'Quick Actions',
-            style: GoogleFonts.dmSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+            'Pilih metode pencatatan',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           GridView.count(
             shrinkWrap: true,
-            crossAxisCount: 3,
+            crossAxisCount: 4,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
+            childAspectRatio: 0.82,
             physics: const NeverScrollableScrollPhysics(),
             children: actions.map((a) {
               return GestureDetector(
-                onTap: () => onAction(a.$4),
+                onTap: () => onAction(a.route),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: a.$3.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : AppTheme.borderLight,
+                    ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(a.$2, color: a.$3, size: 26),
-                      const SizedBox(height: 6),
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          gradient: a.gradient,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: a.glow.withOpacity(0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(a.icon, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        a.$1,
+                        a.label,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
                           color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        a.desc,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 9.5,
+                          color: isDark
+                              ? AppTheme.textDarkSecondary
+                              : AppTheme.textSecondary,
                         ),
                       ),
                     ],

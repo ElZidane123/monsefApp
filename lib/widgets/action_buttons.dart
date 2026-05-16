@@ -7,251 +7,236 @@ import '../themes/app_themes.dart';
 class ActionButtons extends StatelessWidget {
   const ActionButtons({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.edit_note_rounded,
-              label: 'Manual',
-              color: AppTheme.primaryAccent,
-              onTap: () => _showManualOptions(context),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.document_scanner_rounded,
-              label: 'Scan Struk',
-              color: const Color(0xFF7C3AED),
-              onTap: () {
-                HapticFeedback.lightImpact();
-                Navigator.pushNamed(context, AppRoutes.qrScan);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.mic_rounded,
-              label: 'Suara',
-              color: const Color(0xFF059669),
-              onTap: () => _handleVoice(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =========================
-  // 🔥 MANUAL OPTIONS (MODAL)
-  // =========================
-  void _showManualOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _quickOption(
-                icon: Icons.arrow_downward,
-                label: "Tambah Pemasukan",
-                color: Colors.green,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.manualEntry,
-                    arguments: "income",
-                  );
-                },
-              ),
-              _quickOption(
-                icon: Icons.arrow_upward,
-                label: "Tambah Pengeluaran",
-                color: Colors.red,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.manualEntry,
-                    arguments: "expense",
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _quickOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(label),
-      onTap: onTap,
-    );
-  }
-
-  // =========================
-  // 🎤 VOICE HANDLER
-  // =========================
-  void _handleVoice(BuildContext context) async {
-    HapticFeedback.mediumImpact();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    await Future.delayed(const Duration(seconds: 1));
-
-    Navigator.pop(context);
-    Navigator.pushNamed(context, AppRoutes.voiceNote);
-  }
-}
-
-// =====================================
-// 🔥 ACTION BUTTON (ANIMATION + RIPPLE)
-// =====================================
-
-class _ActionButton extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color color;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.color,
-  });
-
-  @override
-  State<_ActionButton> createState() => _ActionButtonState();
-}
-
-class _ActionButtonState extends State<_ActionButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  bool _isHovered = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleTap() {
-    HapticFeedback.lightImpact();
-    widget.onTap();
-  }
+  static const _items = [
+    (icon: Icons.edit_outlined, label: 'Manual', route: AppRoutes.manualEntry),
+    (icon: Icons.document_scanner_outlined, label: 'Scan', route: AppRoutes.qrScan),
+    (icon: Icons.mic_none_rounded, label: 'Suara', route: AppRoutes.voiceNote),
+    (icon: Icons.tune_rounded, label: 'Filter', route: AppRoutes.history),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: _items.asMap().entries.map((e) {
+          final item = e.value;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: e.key == 0 ? 0 : 6,
+                right: e.key == _items.length - 1 ? 0 : 6,
+              ),
+              child: _ActionTile(
+                icon: item.icon,
+                label: item.label,
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  if (item.label == 'Manual') {
+                    _showManualSheet(context, isDark);
+                  } else {
+                    Navigator.pushNamed(context, item.route);
+                  }
+                },
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTapDown: (_) => _controller.forward(),
-        onTapUp: (_) {
-          _controller.reverse();
-          _handleTap();
-        },
-        onTapCancel: () => _controller.reverse(),
-        child: AnimatedScale(
-          scale: _isHovered ? 1.02 : 1.0,
-          duration: const Duration(milliseconds: 200),
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.color.withOpacity(isDark ? 0.15 : 0.08),
-                    blurRadius: _isHovered ? 20 : 12,
-                    offset: Offset(0, _isHovered ? 6 : 4),
-                  ),
-                ],
-                border: Border.all(
-                  color: _isHovered 
-                    ? widget.color.withOpacity(0.3) 
-                    : Colors.transparent,
-                  width: 1.5,
+  void _showManualSheet(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 14, 24, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.15)
+                      : Colors.black.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              'Tambah Transaksi',
+              style: GoogleFonts.inter(
+                fontSize: 18, fontWeight: FontWeight.w700,
+                color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Pilih jenis transaksi',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 22),
+            _sheetRow(
+              context, isDark,
+              icon: Icons.arrow_downward_rounded,
+              color: AppTheme.income,
+              title: 'Pemasukan',
+              subtitle: 'Gaji, transferan masuk',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.manualEntry,
+                    arguments: 'income');
+              },
+            ),
+            const SizedBox(height: 12),
+            _sheetRow(
+              context, isDark,
+              icon: Icons.arrow_upward_rounded,
+              color: AppTheme.expense,
+              title: 'Pengeluaran',
+              subtitle: 'Belanja, tagihan, dll.',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.manualEntry,
+                    arguments: 'expense');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetRow(
+    BuildContext context,
+    bool isDark, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: widget.color.withOpacity(_isHovered ? 0.2 : 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      widget.icon,
-                      color: widget.color,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.label,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppTheme.textDarkPrimary
-                          : AppTheme.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(title,
+                      style: GoogleFonts.inter(
+                        fontSize: 15, fontWeight: FontWeight.w600,
+                        color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+                      )),
+                  Text(subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+                      )),
                 ],
               ),
             ),
-          ),
+            Icon(Icons.chevron_right_rounded, size: 18,
+                color: isDark ? AppTheme.textDarkSecondary : AppTheme.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  State<_ActionTile> createState() => _ActionTileState();
+}
+
+class _ActionTileState extends State<_ActionTile> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: _pressed
+              ? (widget.isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight)
+              : (widget.isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: AppTheme.softShadow(widget.isDark),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.icon,
+              size: 22,
+              color: widget.isDark
+                  ? AppTheme.textDarkPrimary
+                  : AppTheme.textPrimary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.label,
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: widget.isDark
+                    ? AppTheme.textDarkSecondary
+                    : AppTheme.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );

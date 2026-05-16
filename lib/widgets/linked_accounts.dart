@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
 import '../utils/currency_formatter.dart';
@@ -23,38 +25,44 @@ class LinkedAccounts extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Akun Terhubung',
-                style: GoogleFonts.dmSans(
-                  fontSize: 17,
+                'Akun',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
                   letterSpacing: -0.3,
+                  color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
                 ),
               ),
               GestureDetector(
                 onTap: onViewAll,
                 child: Text(
                   'Lihat Semua',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryAccent,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.accent,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 130,
+          height: 136,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: accounts.length,
+            physics: const BouncingScrollPhysics(),
+            itemCount: accounts.length + 1,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              return _AccountCard(account: accounts[index], isDark: isDark);
+            itemBuilder: (context, i) {
+              if (i == accounts.length) {
+                return _AddCard(isDark: isDark);
+              }
+              return _AccountCard(account: accounts[i], isDark: isDark)
+                  .animate()
+                  .fadeIn(delay: (i * 70).ms, duration: 350.ms);
             },
           ),
         ),
@@ -66,111 +74,145 @@ class LinkedAccounts extends StatelessWidget {
 class _AccountCard extends StatelessWidget {
   final AccountModel account;
   final bool isDark;
-
   const _AccountCard({required this.account, required this.isDark});
 
-  IconData get _accountIcon {
+  String _typeLabel() {
     switch (account.type) {
-      case 'savings':
-        return Icons.savings_outlined;
-      case 'checking':
-        return Icons.account_balance_outlined;
-      case 'investment':
-        return Icons.trending_up_rounded;
-      default:
-        return Icons.account_balance_wallet_outlined;
+      case 'savings': return 'Tabungan';
+      case 'checking': return 'Giro';
+      case 'investment': return 'Investasi';
+      default: return 'Akun';
     }
-  }
-
-  Color get _accountColor {
-    switch (account.type) {
-      case 'savings':
-        return const Color(0xFF2563EB);
-      case 'checking':
-        return const Color(0xFF7C3AED);
-      case 'investment':
-        return const Color(0xFF059669);
-      default:
-        return AppTheme.primaryAccent;
-    }
-  }
-
-  String _formatBalance(double amount) {
-    return CurrencyFormatter.compact(amount);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 155,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () => HapticFeedback.selectionClick(),
+      child: Container(
+        width: 158,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppTheme.softShadow(isDark),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Type label
+            Text(
+              _typeLabel().toUpperCase(),
+              style: GoogleFonts.inter(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: isDark
+                    ? AppTheme.textDarkSecondary
+                    : AppTheme.textSecondary,
+              ),
+            ),
+
+            // Balance
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    CurrencyFormatter.compact(account.balance),
+                    style: GoogleFonts.inter(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.8,
+                      color: isDark
+                          ? AppTheme.textDarkPrimary
+                          : AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        account.name,
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: isDark
+                              ? AppTheme.textDarkSecondary
+                              : AppTheme.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      '••${account.lastFourDigits}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isDark
+                            ? AppTheme.textDarkSecondary
+                            : AppTheme.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: _accountColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(_accountIcon, color: _accountColor, size: 18),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  account.name,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+    );
+  }
+}
+
+class _AddCard extends StatelessWidget {
+  final bool isDark;
+  const _AddCard({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fitur segera hadir!')),
+        );
+      },
+      child: Container(
+        width: 110,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.1)
+                : Colors.black.withOpacity(0.1),
+            width: 1.5,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  _formatBalance(account.balance),
-                  style: GoogleFonts.dmSans(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
-                ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_rounded,
+              size: 22,
+              color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Tambah',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
               ),
-              const SizedBox(height: 2),
-              Text(
-                '••${account.lastFourDigits}',
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

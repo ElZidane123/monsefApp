@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -29,61 +28,75 @@ class _SpendingInsightsState extends State<SpendingInsights> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.surfaceDark.withOpacity(0.8) : Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.05) : AppTheme.borderLight,
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : AppTheme.borderLight,
+          ),
+          boxShadow: AppTheme.softShadow(isDark),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Wawasan Pengeluaran',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppTheme.textDarkPrimary
+                            : AppTheme.textPrimary,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tren pengeluaran Anda',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: isDark
+                            ? AppTheme.textDarkSecondary
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                _PeriodSelector(
+                  value: _selectedPeriod,
+                  items: _periods,
+                  isDark: isDark,
+                  onChanged: (v) => setState(() => _selectedPeriod = v!),
+                ),
+              ],
             ),
-          ),
-          child: Stack(
-            children: [
-              // Glass effect if supported
-              BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: const SizedBox.shrink(),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Wawasan Pengeluaran',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      _PeriodDropdown(
-                        value: _selectedPeriod,
-                        items: _periods,
-                        isDark: isDark,
-                        onChanged: (v) => setState(() => _selectedPeriod = v!),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _SpendingSummary(data: _currentData, isDark: isDark),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 160,
-                    child: _SpendingBarChart(data: _currentData, isDark: isDark),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            const SizedBox(height: 18),
+
+            // Summary row
+            _SpendingSummary(data: _currentData, isDark: isDark),
+            const SizedBox(height: 20),
+
+            // Chart
+            SizedBox(
+              height: 170,
+              child: _SpendingBarChart(
+                  data: _currentData, isDark: isDark),
+            ),
+          ],
         ),
       ),
-    ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(duration: 700.ms).slideY(begin: 0.08, end: 0);
   }
 }
 
@@ -100,56 +113,110 @@ class _SpendingSummary extends StatelessWidget {
 
     return Row(
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Rp ${total.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
-              style: GoogleFonts.dmSans(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
-            Text(
-              'Total Spent',
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
-              ),
-            ),
-          ],
+        Expanded(
+          child: _SummaryBox(
+            label: 'Total Dikeluarkan',
+            value:
+                'Rp ${_compact(total)}',
+            icon: Icons.account_balance_wallet_outlined,
+            color: AppTheme.primaryAccent,
+            isDark: isDark,
+          ),
         ),
-        const Spacer(),
-        Container(
-          height: 36,
-          width: 1,
-          color: isDark ? Colors.white12 : AppTheme.borderLight,
-        ),
-        const Spacer(),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              'Rp ${highest.amount.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
-              style: GoogleFonts.dmSans(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFFEF4444),
-                letterSpacing: -0.5,
-              ),
-            ),
-            Text(
-              'Highest (${highest.label})',
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
-              ),
-            ),
-          ],
+        const SizedBox(width: 12),
+        Expanded(
+          child: _SummaryBox(
+            label: 'Tertinggi (${highest.label})',
+            value: 'Rp ${_compact(highest.amount)}',
+            icon: Icons.trending_up_rounded,
+            color: AppTheme.accentRose,
+            isDark: isDark,
+          ),
         ),
       ],
+    );
+  }
+
+  String _compact(double v) {
+    if (v >= 1000000) {
+      return '${(v / 1000000).toStringAsFixed(1)}jt';
+    } else if (v >= 1000) {
+      return '${(v / 1000).toStringAsFixed(0)}rb';
+    }
+    return v.toStringAsFixed(0);
+  }
+}
+
+class _SummaryBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final bool isDark;
+
+  const _SummaryBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 17),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppTheme.textDarkSecondary
+                        : AppTheme.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -169,9 +236,14 @@ class _SpendingBarChartState extends State<_SpendingBarChart> {
 
   @override
   Widget build(BuildContext context) {
+    final maxY = widget.data
+            .map((e) => e.amount)
+            .reduce((a, b) => a > b ? a : b) *
+        1.35;
+
     return BarChart(
       BarChartData(
-        maxY: widget.data.map((e) => e.amount).reduce((a, b) => a > b ? a : b) * 1.3,
+        maxY: maxY,
         alignment: BarChartAlignment.spaceAround,
         barTouchData: BarTouchData(
           enabled: true,
@@ -181,19 +253,24 @@ class _SpendingBarChartState extends State<_SpendingBarChart> {
               return;
             }
             if (event is FlTapDownEvent || event is FlPanUpdateEvent) {
-              setState(() => touchedIndex = response.spot!.touchedBarGroupIndex);
+              setState(
+                  () => touchedIndex = response.spot!.touchedBarGroupIndex);
             }
           },
           touchTooltipData: BarTouchTooltipData(
-            tooltipRoundedRadius: 10,
-            tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            tooltipRoundedRadius: 12,
+            tooltipPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final amount = widget.data[groupIndex].amount;
+              final label = widget.data[groupIndex].label;
               return BarTooltipItem(
-                'Rp ${widget.data[groupIndex].amount.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
-                GoogleFonts.dmSans(
+                '$label\nRp ${_fmt(amount)}',
+                GoogleFonts.inter(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
-                  fontSize: 12,
+                  fontSize: 11,
+                  height: 1.5,
                 ),
               );
             },
@@ -204,35 +281,49 @@ class _SpendingBarChartState extends State<_SpendingBarChart> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              reservedSize: 28,
               getTitlesWidget: (value, meta) {
                 final idx = value.toInt();
-                if (idx < 0 || idx >= widget.data.length) return const SizedBox();
+                if (idx < 0 || idx >= widget.data.length) {
+                  return const SizedBox();
+                }
                 return Padding(
-                  padding: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     widget.data[idx].label,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: widget.isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      color: touchedIndex == idx
+                          ? AppTheme.primaryAccent
+                          : (widget.isDark
+                              ? AppTheme.textDarkSecondary
+                              : AppTheme.textSecondary),
+                      fontWeight: touchedIndex == idx
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
                   ),
                 );
               },
-              reservedSize: 30,
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
+          horizontalInterval: maxY / 4,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: widget.isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05),
+            color: widget.isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.04),
             strokeWidth: 1,
-            dashArray: [4, 4],
+            dashArray: [4, 6],
           ),
         ),
         borderData: FlBorderData(show: false),
@@ -241,34 +332,45 @@ class _SpendingBarChartState extends State<_SpendingBarChart> {
           final isTouched = touchedIndex == index;
           final isHighlighted = item.isHighlighted;
 
-          Color barColor;
-          if (isTouched) {
-            barColor = const Color(0xFF2563EB);
-          } else if (isHighlighted) {
-            barColor = const Color(0xFF2563EB);
-          } else {
-            barColor = widget.isDark
-                ? const Color(0xFF2563EB).withOpacity(0.3)
-                : const Color(0xFF93C5FD);
-          }
-
           return BarChartGroupData(
             x: index,
             barRods: [
               BarChartRodData(
                 toY: item.amount,
-                color: barColor,
-                width: 22,
+                width: 20,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
                 ),
+                gradient: isTouched || isHighlighted
+                    ? const LinearGradient(
+                        colors: [
+                          AppTheme.primaryAccent,
+                          AppTheme.accentPurple,
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      )
+                    : LinearGradient(
+                        colors: [
+                          (widget.isDark
+                                  ? AppTheme.primaryAccent
+                                  : AppTheme.primaryAccent)
+                              .withOpacity(widget.isDark ? 0.25 : 0.2),
+                          (widget.isDark
+                                  ? AppTheme.primaryGlow
+                                  : AppTheme.primaryAccent)
+                              .withOpacity(widget.isDark ? 0.4 : 0.35),
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
-                  toY: widget.data.map((e) => e.amount).reduce((a, b) => a > b ? a : b) * 1.3,
+                  toY: maxY,
                   color: widget.isDark
                       ? Colors.white.withOpacity(0.04)
-                      : Colors.black.withOpacity(0.03),
+                      : Colors.black.withOpacity(0.025),
                 ),
               ),
             ],
@@ -277,15 +379,21 @@ class _SpendingBarChartState extends State<_SpendingBarChart> {
       ),
     );
   }
+
+  String _fmt(double v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}jt';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}rb';
+    return v.toStringAsFixed(0);
+  }
 }
 
-class _PeriodDropdown extends StatelessWidget {
+class _PeriodSelector extends StatelessWidget {
   final String value;
   final List<String> items;
   final bool isDark;
   final ValueChanged<String?> onChanged;
 
-  const _PeriodDropdown({
+  const _PeriodSelector({
     required this.value,
     required this.items,
     required this.isDark,
@@ -295,26 +403,35 @@ class _PeriodDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: isDark ? AppTheme.surfaceDark2 : AppTheme.bgLight,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.08)
+              : AppTheme.borderLight,
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isDense: true,
           icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
+            Icons.expand_more_rounded,
             size: 18,
-            color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+            color: isDark
+                ? AppTheme.textDarkSecondary
+                : AppTheme.textSecondary,
           ),
-          style: GoogleFonts.dmSans(
-            fontSize: 13,
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
             fontWeight: FontWeight.w600,
             color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
           ),
-          dropdownColor: isDark ? AppTheme.surfaceDark2 : Colors.white,
+          dropdownColor:
+              isDark ? AppTheme.surfaceDark2 : Colors.white,
+          borderRadius: BorderRadius.circular(14),
           items: items
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),

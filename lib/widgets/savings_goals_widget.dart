@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
@@ -20,47 +19,46 @@ class SavingsGoalsWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Tujuan Menabung',
-                style: GoogleFonts.dmSans(
-                  fontSize: 18,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
                   color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                  letterSpacing: -0.5,
                 ),
               ),
               GestureDetector(
                 onTap: onViewAll,
                 child: Text(
                   'Lihat Semua',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryAccent,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.accent,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 150,
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 148,
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             physics: const BouncingScrollPhysics(),
             itemCount: goals.length,
-            itemBuilder: (context, index) {
-              final goal = goals[index];
-              return _GoalCard(goal: goal, isDark: isDark)
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              return _GoalCard(goal: goals[i], isDark: isDark)
                   .animate()
-                  .fadeIn(delay: (index * 100).ms, duration: 500.ms)
-                  .slideX(begin: 0.2, end: 0);
+                  .fadeIn(delay: (i * 80).ms, duration: 350.ms);
             },
           ),
         ),
@@ -72,100 +70,92 @@ class SavingsGoalsWidget extends StatelessWidget {
 class _GoalCard extends StatelessWidget {
   final SavingsGoalModel goal;
   final bool isDark;
-
   const _GoalCard({required this.goal, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
+    final progress = goal.progress.clamp(0.0, 1.0);
+    final pct = (progress * 100).toInt();
+    final goalColor = Color(goal.colorHex);
+
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Detail goal ${goal.title} segera hadir!')),
-        );
-      },
+      onTap: () => HapticFeedback.selectionClick(),
       child: Container(
-        width: 140,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
+        width: 152,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? AppTheme.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : AppTheme.borderLight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppTheme.softShadow(isDark),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Color(goal.colorHex).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                goal.icon,
-                color: Color(goal.colorHex),
-                size: 20,
+            // Icon — small and clean
+            Icon(goal.icon, size: 22, color: goalColor),
+
+            // Title
+            Text(
+              goal.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
               ),
             ),
+
+            // Progress
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  goal.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Stack(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      height: 6,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(3),
+                    Text(
+                      '$pct%',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: goalColor,
                       ),
                     ),
-                    Container(
-                      height: 6,
-                      width: 140 * goal.progress, // Approximate
-                      decoration: BoxDecoration(
-                        color: Color(goal.colorHex),
-                        borderRadius: BorderRadius.circular(3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(goal.colorHex).withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                    Text(
+                      'dari target',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: isDark
+                            ? AppTheme.textDarkSecondary
+                            : AppTheme.textSecondary,
                       ),
-                    ).animate().scaleX(duration: 1.seconds, curve: Curves.easeOut),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  '${(goal.progress * 100).toInt()}%',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Stack(
+                    children: [
+                      Container(
+                        height: 5,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.07)
+                            : Colors.black.withOpacity(0.06),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: progress,
+                        child: Container(
+                          height: 5,
+                          color: goalColor,
+                        ),
+                      ).animate().scaleX(
+                        alignment: Alignment.centerLeft,
+                        duration: 900.ms,
+                        curve: Curves.easeOutExpo,
+                      ),
+                    ],
                   ),
                 ),
               ],
