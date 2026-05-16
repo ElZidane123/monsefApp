@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image_picker/image_picker.dart';
 import '../themes/app_themes.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'manual_entry_screen.dart';
+import 'scan_result_screen.dart';
+import 'dart:io' show Platform;
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -11,179 +16,595 @@ class QRScannerScreen extends StatefulWidget {
   State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
-class _QRScannerScreenState extends State<QRScannerScreen>
-    with SingleTickerProviderStateMixin {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
-  bool _isScanned = false;
-  bool _flashOn = false;
-  late AnimationController _scanLineCtrl;
-  late Animation<double> _scanLineAnim;
+class _QRScannerScreenState extends State<QRScannerScreen> {
+  CameraController? _cameraController;
+  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  bool _isCameraInitialized = false;
+  bool _isScanning = false;
+  double _currentZoomLevel = 1.0;
+  double _minAvailableZoom = 1.0;
+  double _maxAvailableZoom = 1.0;
 
   @override
   void initState() {
     super.initState();
-    _scanLineCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _scanLineAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _scanLineCtrl, curve: Curves.easeInOut),
-    );
+    _initCamera();
   }
 
-  @override
-  void reassemble() {
-    super.reassemble();
-    controller?.pauseCamera();
-    controller?.resumeCamera();
+  Future<void> _initCamera() async {
+    try {
+      // 1. Check Permissions
+      var status = await Permission.camera.status;
+      if (status.isDenied) {
+        status = await Permission.camera.request();
+      }
+      
+      if (status.isPermanentlyDenied || status.isDenied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Izin kamera diperlukan untuk fitur ini.')),
+          );
+        }
+        return;
+      }
+
+      // 2. Check Platform
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Fitur scan struk hanya tersedia di Android dan iOS.')),
+          );
+        }
+        return;
+      }
+
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) return;
+
+      final firstCamera = cameras.first;
+      _cameraController = CameraController(
+        firstCamera,
+        ResolutionPreset.high, // 'high' is more stable for OCR across most devices
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
+
+      await _cameraController!.initialize();
+      
+      // Get zoom levels
+      _minAvailableZoom = await _cameraController!.getMinZoomLevel();
+      _maxAvailableZoom = await _cameraController!.getMaxZoomLevel();
+      
+      if (!mounted) return;
+
+      setState(() {
+        _isCameraInitialized = true;
+      });
+    } catch (e) {
+      debugPrint("Kamera error: $e");
+    }
   }
 
   @override
   void dispose() {
-    controller?.dispose();
-    _scanLineCtrl.dispose();
+    _cameraController?.dispose();
+    _textRecognizer.close();
     super.dispose();
   }
 
-  void _onQRViewCreated(QRViewController ctrl) {
-    controller = ctrl;
-    ctrl.scannedDataStream.listen((scanData) {
-      if (!_isScanned && scanData.code != null && scanData.code!.isNotEmpty) {
-        setState(() => _isScanned = true);
-        ctrl.pauseCamera();
-        _showScanResult(scanData.code!);
-      }
-    });
-  }
-
-  void _showScanResult(String code) {
-    // Attempt to parse QR code as a receipt
-    // In a real app this would use OCR or a standardized receipt QR format
-    // Here we'll simulate parsing:
-    double amount = 50000;
-    String title = "Struk Belanja";
-
-    if (code.startsWith('PAY:')) {
-      final parts = code.split(':');
-      if (parts.length >= 2) title = parts[1];
-      if (parts.length >= 3) amount = double.tryParse(parts[2]) ?? 50000;
-    } else {
-      title = code;
+  Future<void> _captureAndScan() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized || _isScanning) {
+      return;
     }
 
+    setState(() {
+      _isScanning = true;
+    });
+
+    try {
+      // Ensure the camera is ready and stable
+      if (_cameraController!.value.isTakingPicture) return;
+      
+      final XFile imageFile = await _cameraController!.takePicture();
+      final InputImage inputImage = InputImage.fromFilePath(imageFile.path);
+
+      final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
+      
+      if (recognizedText.text.trim().isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tidak ada teks yang terdeteksi. Pastikan gambar jelas.')),
+          );
+        }
+      }
+      
+      _parseReceiptText(recognizedText.text);
+
+    } catch (e) {
+      debugPrint("Gagal scan error: $e");
+      
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Gagal Membaca Struk'),
+            content: Text(
+              'Terjadi kesalahan saat memproses gambar.\n\nDetail: ${e.toString()}\n\nPastikan struk berada di tempat yang terang dan teks terlihat jelas.',
+              style: GoogleFonts.inter(fontSize: 13),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Tutup'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _pickFromGallery();
+                },
+                child: const Text('Coba dari Galeri'),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    // 1. Platform check
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fitur galeri hanya tersedia di Android dan iOS.')),
+        );
+      }
+      return;
+    }
+
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      setState(() => _isScanning = true);
+
+      final InputImage inputImage = InputImage.fromFilePath(image.path);
+      final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
+
+      if (recognizedText.text.trim().isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tidak ada teks yang terdeteksi. Pastikan gambar jelas.')),
+          );
+        }
+      }
+
+      _parseReceiptText(recognizedText.text);
+    } catch (e) {
+      debugPrint("Gallery scan error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memproses gambar: ${e.toString().contains('Tidak ada teks') ? 'Teks tidak terbaca' : 'Coba gambar lain'}'),
+            backgroundColor: AppTheme.expense,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
+    }
+  }
+
+  void _parseReceiptText(String text) {
+    debugPrint("=== TEKS HASIL SCAN ===");
+    debugPrint(text);
+    debugPrint("=======================");
+
+    final lines = text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    
+    double finalAmount = 0.0;
+    String title = "Struk Belanja";
+
+    // 1. HIGH-PRECISION MERCHANT NAME EXTRACTION
+    if (lines.isNotEmpty) {
+      // Ignore lines that are definitely NOT merchant names
+      final ignoreKeywords = [
+        'jl.', 'jalan', 'telp', '08', 'date', 'tanggal', 'npwp', 'receipt', 'faktur', 
+        'inv', 'no.', 'order', 'table', 'kasir', 'cashier', 'server', 'check', 'pajak', 
+        'tax', 'time', 'jam', 'pindah', 'meja', 'antrian', 'qris'
+      ];
+
+      for (var i = 0; i < lines.length && i < 12; i++) {
+        final line = lines[i];
+        final lower = line.toLowerCase();
+        
+        bool shouldIgnore = ignoreKeywords.any((k) => lower.contains(k)) || 
+                           lower.contains(':') || 
+                           lower.contains('=') ||
+                           line.length < 3 ||
+                           RegExp(r'^\d+$').hasMatch(line) ||
+                           RegExp(r'\d{2}/\d{2}').hasMatch(line);
+
+        if (!shouldIgnore) {
+          // If we find a line in All Caps, it's very likely the merchant name
+          if (line == line.toUpperCase() && RegExp(r'[A-Z]').hasMatch(line)) {
+            title = line;
+            break;
+          }
+          // Fallback to the first non-ignored line
+          if (title == "Struk Belanja") {
+            title = line;
+          }
+        }
+      }
+    }
+
+    // 2. HIGH-PRECISION TOTAL EXTRACTION (WITH RANKING)
+    final highPriorityKeywords = ['grand total', 'total bayar', 'tagihan', 'total belanja', 'nett', 'payable', 'amount due'];
+    final mediumPriorityKeywords = ['total', 'jumlah', 'amount', 'tunai', 'cash'];
+    final lowPriorityKeywords = ['subtotal', 'sub total', 'item'];
+
+    int bestRank = -1; // -1: none, 0: low, 1: med, 2: high
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].toLowerCase();
+      int currentRank = -1;
+      
+      if (highPriorityKeywords.any((k) => line.contains(k))) {
+        currentRank = 2;
+      } else if (mediumPriorityKeywords.any((k) => line.contains(k))) {
+        // Double check it's not a subtotal
+        if (!line.contains('sub')) currentRank = 1;
+      } else if (lowPriorityKeywords.any((k) => line.contains(k))) {
+        currentRank = 0;
+      }
+
+      if (currentRank >= bestRank) {
+        // Try to find a number in this line
+        double? val = _extractPrice(line);
+        
+        // If not on same line, look up to 2 lines below
+        if (val == null || val < 100) {
+          for (int j = 1; j <= 2; j++) {
+            if (i + j < lines.length) {
+              val = _extractPrice(lines[i + j]);
+              if (val != null && val > 100) break;
+            }
+          }
+        }
+
+        if (val != null && val > 100) {
+          // If we found a better rank or a larger value for the same rank
+          if (currentRank > bestRank || val > finalAmount) {
+            finalAmount = val;
+            bestRank = currentRank;
+          }
+        }
+      }
+    }
+
+    // 3. Fallback: Take largest number with strict filters
+    if (finalAmount == 0.0) {
+      double maxNum = 0.0;
+      for (var line in lines) {
+        final val = _extractPrice(line);
+        if (val != null) {
+          bool isYear = val >= 2020 && val <= 2030;
+          bool isTooLarge = val > 20000000; // Filter out phone numbers
+          bool isDatePattern = RegExp(r'\b\d{2}[./-]\d{2}[./-]\d{2,4}\b').hasMatch(line);
+          bool isTimePattern = RegExp(r'\b\d{1,2}:\d{2}\b').hasMatch(line);
+
+          if (!isYear && !isTooLarge && !isDatePattern && !isTimePattern && val > maxNum) {
+            maxNum = val;
+          }
+        }
+      }
+      finalAmount = maxNum;
+    }
+
+    if (finalAmount == 0.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nominal tidak terdeteksi otomatis. Silakan isi manual.'),
+          backgroundColor: AppTheme.expense,
+        ),
+      );
+    }
+
+    // Navigasi ke layar review hasil scan
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => ManualEntryScreen(
-          initialTitle: title,
-          initialAmount: amount,
-          isExpense: true,
+        builder: (_) => ScanResultScreen(
+          scannedTitle: title,
+          scannedAmount: finalAmount,
+          rawText: text,
         ),
       ),
     );
   }
 
+  double? _extractPrice(String input) {
+    // 1. CHARACTER CORRECTION (Handle common OCR errors)
+    // e.g., "TotaI" -> "Total", "Rp. S0.000" -> "Rp. 50.000"
+    String corrected = input.toLowerCase()
+        .replaceAll('rp', '')
+        .replaceAll('idr', '')
+        .replaceAll(':', '')
+        .replaceAll('=', '')
+        .replaceAll('s', '5') // S often read as 5 in prices
+        .replaceAll('o', '0') // O often read as 0
+        .replaceAll('i', '1') // I/l often read as 1
+        .replaceAll('l', '1');
+    
+    // 2. Regex for various price formats
+    final priceRegex = RegExp(r'\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{2})?|\b\d{4,}\b');
+    final matches = priceRegex.allMatches(corrected);
+    
+    double? bestMatch;
+    
+    for (var match in matches) {
+      String m = match.group(0)!;
+      String normalized = m;
+      
+      // Normalize Indonesian/European formats (100.000,00)
+      if (m.contains('.') && m.contains(',')) {
+        if (m.lastIndexOf('.') < m.lastIndexOf(',')) {
+          normalized = m.replaceAll('.', '').replaceAll(',', '.');
+        } else {
+          normalized = m.replaceAll(',', '').replaceAll('.', '.');
+        }
+      } else if (m.contains(',')) {
+        if (m.split(',').last.length == 3) {
+          normalized = m.replaceAll(',', '');
+        } else {
+          normalized = m.replaceAll(',', '.');
+        }
+      } else if (m.contains('.')) {
+        if (m.split('.').last.length == 3) {
+          normalized = m.replaceAll('.', '');
+        } else {
+          normalized = m;
+        }
+      }
+      
+      normalized = normalized.replaceAll(RegExp(r'[^0-9.]'), '');
+      final val = double.tryParse(normalized);
+      if (val != null) {
+        if (bestMatch == null || val > bestMatch) {
+          bestMatch = val;
+        }
+      }
+    }
+    
+    return bestMatch;
+  }
+
+  Widget _buildCorners() {
+    return Stack(
+      children: [
+        // Top Left
+        Positioned(
+          top: 0, left: 0,
+          child: _corner(top: true, left: true),
+        ),
+        // Top Right
+        Positioned(
+          top: 0, right: 0,
+          child: _corner(top: true, left: false),
+        ),
+        // Bottom Left
+        Positioned(
+          bottom: 0, left: 0,
+          child: _corner(top: false, left: true),
+        ),
+        // Bottom Right
+        Positioned(
+          bottom: 0, right: 0,
+          child: _corner(top: false, left: false),
+        ),
+      ],
+    );
+  }
+
+  Widget _corner({required bool top, required bool left}) {
+    const double size = 30;
+    const double thickness = 4;
+    return Container(
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+          Positioned(
+            top: top ? 0 : null,
+            bottom: top ? null : 0,
+            left: 0, right: 0,
+            child: Container(height: thickness, color: AppTheme.primaryAccent),
+          ),
+          Positioned(
+            left: left ? 0 : null,
+            right: left ? null : 0,
+            top: 0, bottom: 0,
+            child: Container(width: thickness, color: AppTheme.primaryAccent),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onViewfinderTap(TapDownDetails details, BoxConstraints constraints) {
+    if (_cameraController == null) return;
+
+    final offset = Offset(
+      details.localPosition.dx / constraints.maxWidth,
+      details.localPosition.dy / constraints.maxHeight,
+    );
+    _cameraController!.setFocusPoint(offset);
+    _cameraController!.setExposurePoint(offset);
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Camera view
-          QRView(
-            key: qrKey,
-            onQRViewCreated: _onQRViewCreated,
-            overlay: QrScannerOverlayShape(
-              borderColor: AppTheme.primaryAccent,
-              borderRadius: 20,
-              borderLength: 36,
-              borderWidth: 4,
-              cutOutSize: MediaQuery.of(context).size.width * 0.72,
-              cutOutBottomOffset: 40,
-            ),
-          ),
+          // Camera Preview
+          if (_isCameraInitialized)
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = MediaQuery.of(context).size;
+                  final screenRatio = size.aspectRatio;
+                  double cameraRatio = _cameraController!.value.aspectRatio;
+                  
+                  // Sesuaikan orientasi aspectRatio kamera dengan layar
+                  if ((screenRatio > 1.0 && cameraRatio < 1.0) || 
+                      (screenRatio < 1.0 && cameraRatio > 1.0)) {
+                    cameraRatio = 1.0 / cameraRatio;
+                  }
+                  
+                  final scale = screenRatio > cameraRatio 
+                      ? screenRatio / cameraRatio 
+                      : cameraRatio / screenRatio;
 
-          // Scan line animation
+                  return ClipRect(
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Center(
+                        child: GestureDetector(
+                          onTapDown: (details) => _onViewfinderTap(details, constraints),
+                          child: CameraPreview(_cameraController!),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            const Center(child: CircularProgressIndicator(color: AppTheme.income)),
+
+          // Overlay Gelap dengan lubang
           Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _scanLineAnim,
-              builder: (context, _) {
-                final scanBoxSize = MediaQuery.of(context).size.width * 0.72;
-                final top = (MediaQuery.of(context).size.height / 2) -
-                    (scanBoxSize / 2) +
-                    40 +
-                    (_scanLineAnim.value * (scanBoxSize - 4));
-                return Positioned(
-                  top: top,
-                  left: (MediaQuery.of(context).size.width - scanBoxSize) / 2,
-                  child: Container(
-                    width: scanBoxSize,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          AppTheme.primaryAccent.withOpacity(0.8),
-                          AppTheme.primaryAccent,
-                          AppTheme.primaryAccent.withOpacity(0.8),
-                          Colors.transparent,
-                        ],
+            child: ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.5),
+                BlendMode.srcOut,
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                    ),
+                  ),
+                  Center(
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
 
-          // Top bar
+          // Scanning Box Decoration (Corners & Line)
+          Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Stack(
+                children: [
+                  // Corner Borders
+                  _buildCorners(),
+                  
+                  if (_isScanning)
+                    const _ScanningLine(),
+                    
+                  if (_isScanning)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // Top Bar
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Colors.black45,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white, size: 18),
+                      child: const Icon(Icons.close_rounded, color: Colors.white),
                     ),
                   ),
+                  const SizedBox(width: 16),
                   Text(
-                    'Scan QR Code',
-                    style: GoogleFonts.dmSans(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700),
+                    'Pindai Struk',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                  // Flash toggle
+                  const Spacer(),
+                  // Flash Toggle
                   GestureDetector(
                     onTap: () async {
-                      await controller?.toggleFlash();
-                      setState(() => _flashOn = !_flashOn);
+                      if (_cameraController == null) return;
+                      final isFlashOn = _cameraController!.value.flashMode == FlashMode.torch;
+                      await _cameraController!.setFlashMode(
+                        isFlashOn ? FlashMode.off : FlashMode.torch,
+                      );
+                      setState(() {});
                     },
                     child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _flashOn
-                            ? AppTheme.primaryAccent
-                            : Colors.black.withOpacity(0.5),
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Colors.black45,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        _flashOn ? Icons.flash_on : Icons.flash_off,
-                        color: Colors.white,
-                        size: 20,
+                        _cameraController?.value.flashMode == FlashMode.torch
+                            ? Icons.flash_on_rounded
+                            : Icons.flash_off_rounded,
+                        color: _cameraController?.value.flashMode == FlashMode.torch
+                            ? Colors.yellow
+                            : Colors.white,
                       ),
                     ),
                   ),
@@ -192,75 +613,99 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             ),
           ),
 
-          // Bottom instruction
+          // Bottom Bar - Capture Button
           Positioned(
-            bottom: 0,
+            bottom: 40,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 48),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.85),
-                  ],
+            child: Column(
+              children: [
+                Text(
+                  'Arahkan struk ke dalam kotak dan tekan tombol',
+                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
                 ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                    ),
+                const SizedBox(height: 20),
+                
+                // Zoom Slider
+                if (_isCameraInitialized)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.qr_code_scanner_rounded,
-                            color: Colors.white.withOpacity(0.8), size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Arahkan kamera ke QR Code',
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 13,
+                        const Icon(Icons.zoom_out_rounded, color: Colors.white70, size: 18),
+                        Expanded(
+                          child: Slider(
+                            value: _currentZoomLevel,
+                            min: _minAvailableZoom,
+                            max: _maxAvailableZoom,
+                            activeColor: AppTheme.primaryAccent,
+                            onChanged: (value) async {
+                              setState(() => _currentZoomLevel = value);
+                              await _cameraController!.setZoomLevel(value);
+                            },
                           ),
                         ),
+                        const Icon(Icons.zoom_in_rounded, color: Colors.white70, size: 18),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: double.infinity,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                  
+                const SizedBox(height: 10),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Gallery Button
+                    GestureDetector(
+                      onTap: _pickFromGallery,
+                      child: Container(
+                        height: 54,
+                        width: 54,
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white24),
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        child: const Icon(Icons.photo_library_rounded, color: Colors.white, size: 24),
                       ),
-                      child: Center(
-                        child: Text(
-                          'Batalkan',
-                          style: GoogleFonts.dmSans(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(width: 32),
+                    
+                    // Capture Button
+                    GestureDetector(
+                      onTap: _captureAndScan,
+                      child: Container(
+                        height: 84,
+                        width: 84,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                        ),
+                        child: Center(
+                          child: Container(
+                            height: 68,
+                            width: 68,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.primaryAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: _isScanning
+                                ? const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                                  )
+                                : const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 34),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    
+                    const SizedBox(width: 32),
+                    // Placeholder for balance
+                    const SizedBox(width: 54),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -268,4 +713,61 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     );
   }
 }
+class _ScanningLine extends StatefulWidget {
+  const _ScanningLine();
 
+  @override
+  State<_ScanningLine> createState() => _ScanningLineState();
+}
+
+class _ScanningLineState extends State<_ScanningLine> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Positioned(
+          top: _controller.value * (MediaQuery.of(context).size.height * 0.5 - 2),
+          left: 10,
+          right: 10,
+          child: Container(
+            height: 2,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryAccent.withOpacity(0.5),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ],
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primaryAccent.withOpacity(0.1),
+                  AppTheme.primaryAccent,
+                  AppTheme.primaryAccent.withOpacity(0.1),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

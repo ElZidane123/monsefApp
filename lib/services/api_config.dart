@@ -5,7 +5,7 @@
 // - Web / Desktop     : http://localhost:3000
 
 class ApiConfig {
-  static const String baseUrl = 'http://10.222.56.9:3000';
+  static const String baseUrl = 'http://192.168.101.8:3000';
 
 
   static const Duration connectTimeout = Duration(seconds: 10);
