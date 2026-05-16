@@ -16,6 +16,13 @@ class ProfileScreen extends StatelessWidget {
     final controller = context.watch<AppController>();
     final user = controller.user;
 
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
       body: SingleChildScrollView(

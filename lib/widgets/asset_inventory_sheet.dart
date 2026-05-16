@@ -30,7 +30,7 @@ class AssetInventorySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accounts = context.watch<AppController>().accounts;
-    final totalBalance = context.watch<AppController>().user.totalBalance;
+    final totalBalance = context.watch<AppController>().user?.totalBalance;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
@@ -124,7 +124,7 @@ class AssetInventorySheet extends StatelessWidget {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          CurrencyFormatter.format(totalBalance),
+                          CurrencyFormatter.format(totalBalance!),
                           style: GoogleFonts.dmSans(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,

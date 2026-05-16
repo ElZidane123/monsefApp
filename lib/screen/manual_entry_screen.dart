@@ -11,12 +11,14 @@ class ManualEntryScreen extends StatefulWidget {
   final String? initialTitle;
   final double? initialAmount;
   final bool isExpense;
+  final TransactionModel? existingTransaction;
 
   const ManualEntryScreen({
     super.key,
     this.initialTitle,
     this.initialAmount,
     this.isExpense = true,
+    this.existingTransaction,
   });
 
   @override
@@ -51,12 +53,24 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _isExpense = widget.isExpense;
-    if (widget.initialTitle != null) {
-      _titleCtrl.text = widget.initialTitle!;
-    }
-    if (widget.initialAmount != null) {
-      _amountCtrl.text = widget.initialAmount!.toStringAsFixed(0);
+    if (widget.existingTransaction != null) {
+      final tx = widget.existingTransaction!;
+      _isExpense = tx.isExpense;
+      _titleCtrl.text = tx.title;
+      _amountCtrl.text = tx.amount.toStringAsFixed(0);
+      _categoryCtrl.text = tx.category;
+      _noteCtrl.text = tx.note ?? '';
+      _selectedDate = tx.date;
+      _selectedAccountId = tx.accountId;
+      _selectedIcon = tx.icon;
+    } else {
+      _isExpense = widget.isExpense;
+      if (widget.initialTitle != null) {
+        _titleCtrl.text = widget.initialTitle!;
+      }
+      if (widget.initialAmount != null) {
+        _amountCtrl.text = widget.initialAmount!.toStringAsFixed(0);
+      }
     }
   }
 
@@ -90,7 +104,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     }
 
     final newTx = TransactionModel(
-      id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+      id: widget.existingTransaction?.id ?? 'tx_${DateTime.now().millisecondsSinceEpoch}',
       title: title,
       category: category.isEmpty ? 'Lainnya' : category,
       amount: amount,
@@ -102,7 +116,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       note: _noteCtrl.text.trim(),
     );
 
-    final success = await context.read<AppController>().addTransaction(newTx);
+    final appCtrl = context.read<AppController>();
+    final success = widget.existingTransaction != null
+        ? await appCtrl.updateTransaction(newTx.id, newTx)
+        : await appCtrl.addTransaction(newTx);
+
     if (success && mounted) {
       Navigator.pop(context);
     }

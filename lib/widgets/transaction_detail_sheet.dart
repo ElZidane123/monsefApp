@@ -6,6 +6,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../models/models.dart';
 import '../themes/app_themes.dart';
 import '../utils/currency_formatter.dart';
+import '../screen/manual_entry_screen.dart';
+import '../controllers/app_controller.dart';
+import 'package:provider/provider.dart';
 
 class TransactionDetailSheet extends StatelessWidget {
   final TransactionModel transaction;
@@ -319,22 +322,69 @@ class TransactionDetailSheet extends StatelessWidget {
       children: [
         Expanded(
           child: _actionButton(
-            label: 'Bagikan Resi',
-            icon: Icons.ios_share_rounded,
-            onPressed: () {},
+            label: 'Hapus',
+            icon: Icons.delete_outline_rounded,
+            onPressed: () => _confirmDelete(context),
             primary: false,
+            isDestructive: true,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _actionButton(
-            label: 'Tanya AI',
-            icon: Icons.auto_awesome_rounded,
-            onPressed: () {},
+            label: 'Edit',
+            icon: Icons.edit_rounded,
+            onPressed: () {
+              Navigator.pop(context); // close sheet
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ManualEntryScreen(existingTransaction: transaction),
+                ),
+              );
+            },
             primary: true,
           ),
         ),
       ],
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+        title: Text(
+          'Hapus Transaksi',
+          style: GoogleFonts.dmSans(
+            color: isDark ? AppTheme.textDarkPrimary : AppTheme.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus transaksi ini? Saldo akun akan dikembalikan ke kondisi semula.',
+          style: GoogleFonts.dmSans(
+            color: isDark ? AppTheme.textDarkSecondary : AppTheme.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: GoogleFonts.dmSans(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx); // close dialog
+              final success = await context.read<AppController>().deleteTransaction(transaction.id);
+              if (success && context.mounted) {
+                Navigator.pop(context); // close bottom sheet
+              }
+            },
+            child: Text('Hapus', style: GoogleFonts.dmSans(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -343,7 +393,16 @@ class TransactionDetailSheet extends StatelessWidget {
     required IconData icon,
     required VoidCallback onPressed,
     required bool primary,
+    bool isDestructive = false,
   }) {
+    final color = isDestructive 
+      ? Colors.redAccent 
+      : (primary ? AppTheme.primaryAccent : (isDark ? AppTheme.surfaceDark2 : Colors.black12));
+      
+    final textColor = primary || isDestructive 
+      ? Colors.white 
+      : (isDark ? Colors.white70 : Colors.black87);
+
     return InkWell(
       onTap: () {
         HapticFeedback.mediumImpact();
@@ -353,20 +412,20 @@ class TransactionDetailSheet extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: primary ? AppTheme.primaryAccent : (isDark ? AppTheme.surfaceDark2 : Colors.black12),
+          color: color,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: primary ? Colors.white : (isDark ? Colors.white70 : Colors.black87)),
+            Icon(icon, size: 18, color: textColor),
             const SizedBox(width: 8),
             Text(
               label,
               style: GoogleFonts.dmSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: primary ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                color: textColor,
               ),
             ),
           ],

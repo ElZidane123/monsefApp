@@ -177,6 +177,38 @@ class _HomeContent extends StatelessWidget {
     final transactions = controller.transactions;
     final accounts = controller.accounts;
 
+    if (controller.isLoading && user == null) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (controller.hasError && user == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.expense),
+            const SizedBox(height: 16),
+            Text(
+              controller.errorMessage ?? 'Terjadi kesalahan',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(color: Theme.of(context).brightness == Brightness.dark ? AppTheme.textDarkPrimary : AppTheme.textPrimary),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => controller.refreshData(),
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (user == null) {
+      return const SizedBox.shrink();
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final horizontalPadding = constraints.maxWidth > 600 ? 40.0 : 20.0;

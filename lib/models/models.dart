@@ -54,6 +54,16 @@ class AccountModel {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+      'balance': balance,
+      'lastFourDigits': lastFourDigits,
+    };
+  }
+
   String get displayName => '$name  ****$lastFourDigits';
   String get shortBalance {
     if (balance >= 1000000000) return 'Rp ${(balance / 1000000000).toStringAsFixed(1)} M';
@@ -131,6 +141,24 @@ class TransactionModel {
     if (icon is int) return IconData(icon, fontFamily: 'MaterialIcons');
     if (icon is String) {
       switch (icon) {
+        // API string keys (Mockoon)
+        case 'coffee':         return Icons.coffee_rounded;
+        case 'payments':       return Icons.payments_rounded;
+        case 'shopping_bag':   return Icons.shopping_bag_rounded;
+        case 'directions_car': return Icons.directions_car_rounded;
+        case 'home':           return Icons.home_rounded;
+        case 'movie':          return Icons.movie_rounded;
+        case 'shopping_cart':  return Icons.shopping_cart_rounded;
+        case 'work':           return Icons.work_rounded;
+        case 'music_note':     return Icons.music_note_rounded;
+        case 'electric_bolt':  return Icons.electric_bolt_rounded;
+        case 'trending_up':    return Icons.trending_up_rounded;
+        case 'inventory':      return Icons.inventory_2_rounded;
+        case 'laptop':         return Icons.laptop_mac_rounded;
+        case 'flight':         return Icons.flight_takeoff_rounded;
+        case 'security':       return Icons.security_rounded;
+        case 'savings':        return Icons.savings_rounded;
+        // Legacy emoji keys
         case '☕': return Icons.coffee_rounded;
         case '💰': return Icons.payments_rounded;
         case '🍎': return Icons.shopping_bag_rounded;
@@ -146,10 +174,10 @@ class TransactionModel {
         case '💻': return Icons.laptop_mac_rounded;
         case '🗾': return Icons.flight_takeoff_rounded;
         case '🛡️': return Icons.security_rounded;
-        default: return Icons.help_outline_rounded;
+        default: return Icons.receipt_long_rounded;
       }
     }
-    return Icons.help_outline_rounded;
+    return Icons.receipt_long_rounded;
   }
 
   Map<String, dynamic> toJson() {
@@ -160,7 +188,7 @@ class TransactionModel {
       'amount': amount,
       'isExpense': isExpense,
       'date': date.toIso8601String(),
-      'icon': icon.codePoint,
+      'icon': _iconToString(icon),
       'status': status.name,
       'accountId': accountId,
       'note': note,
@@ -170,6 +198,17 @@ class TransactionModel {
         'quantity': i.quantity,
       }).toList(),
     };
+  }
+
+  static String _iconToString(IconData icon) {
+    const map = {
+      0xe1d8: 'coffee', 0xf04e: 'payments', 0xea16: 'shopping_bag',
+      0xe531: 'directions_car', 0xea41: 'home', 0xe54d: 'movie',
+      0xe564: 'shopping_cart', 0xe8f9: 'work', 0xe3a7: 'music_note',
+      0xebd5: 'electric_bolt', 0xe6d2: 'trending_up', 0xf058: 'inventory',
+      0xe322: 'laptop', 0xe539: 'flight', 0xe32a: 'security',
+    };
+    return map[icon.codePoint] ?? 'payments';
   }
 
   static TransactionStatus _parseStatus(String? status) {
@@ -259,6 +298,7 @@ class SpendingDataModel {
 }
 
 class SavingsGoalModel {
+  final String id;
   final String title;
   final double targetAmount;
   final double currentAmount;
@@ -266,12 +306,33 @@ class SavingsGoalModel {
   final int colorHex;
 
   const SavingsGoalModel({
+    this.id = '',
     required this.title,
     required this.targetAmount,
     required this.currentAmount,
     required this.icon,
     required this.colorHex,
   });
+
+  factory SavingsGoalModel.fromJson(Map<String, dynamic> json) {
+    return SavingsGoalModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? '',
+      targetAmount: (json['targetAmount'] ?? 0).toDouble(),
+      currentAmount: (json['currentAmount'] ?? 0).toDouble(),
+      icon: TransactionModel._parseIcon(json['icon'] ?? 'savings'),
+      colorHex: json['colorHex'] ?? 0xFF3B82F6,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'targetAmount': targetAmount,
+    'currentAmount': currentAmount,
+    'icon': TransactionModel._iconToString(icon),
+    'colorHex': colorHex,
+  };
 
   double get progress => (currentAmount / targetAmount).clamp(0.0, 1.0);
 }

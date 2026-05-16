@@ -1,0 +1,479 @@
+{
+  "uuid": "a1b2c3d4-0001-0001-0001-000000000001",
+  "lastMigration": 33,
+  "name": "Monsef Finance API",
+  "endpointPrefix": "",
+  "latency": 80,
+  "port": 3000,
+  "hostname": "0.0.0.0",
+  "folders": [],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "3a65e94e-3a46-4e4c-bb65-4286ca2e2a01"
+    },
+    {
+      "type": "route",
+      "uuid": "b4c5ea00-7a4f-49c5-8e7c-2eb91c05d3d5"
+    },
+    {
+      "type": "route",
+      "uuid": "729c43d5-7853-483e-87eb-78c2027d9b96"
+    },
+    {
+      "type": "route",
+      "uuid": "65ab59e0-e62e-4a99-b70a-ba43d5f787ac"
+    },
+    {
+      "type": "route",
+      "uuid": "b997f076-9103-4b05-bf0b-b35a97e4c0a5"
+    },
+    {
+      "type": "route",
+      "uuid": "6ec0aac3-287d-4df2-992a-07bae0493074"
+    },
+    {
+      "type": "route",
+      "uuid": "d0fb86aa-c9bf-448c-97c5-0f5ab194b303"
+    },
+    {
+      "type": "route",
+      "uuid": "15b1961e-bf62-461f-999e-1c92d380da7e"
+    },
+    {
+      "type": "route",
+      "uuid": "4a33acea-fc29-475a-809e-9050916d6ea4"
+    },
+    {
+      "type": "route",
+      "uuid": "1952e79b-0f62-46d5-9fce-49f836d83fc2"
+    },
+    {
+      "type": "route",
+      "uuid": "5f105acb-a488-4206-8d44-d51a7e1d38e0"
+    },
+    {
+      "type": "route",
+      "uuid": "e56e82f7-9663-475e-87db-7f5597f7a873"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": [
+    {
+      "uuid": "bbb74269-88b2-455e-81ce-57324a947ca9",
+      "id": "hpoz",
+      "name": "Transactions DB",
+      "documentation": "",
+      "value": "[\n]"
+    }
+  ],
+  "callbacks": [],
+  "routes": [
+    {
+      "uuid": "3a65e94e-3a46-4e4c-bb65-4286ca2e2a01",
+      "type": "http",
+      "documentation": "GET /profile — User profile & total balance",
+      "method": "get",
+      "endpoint": "profile",
+      "responses": [
+        {
+          "uuid": "54b8b0d8-4fcc-46be-9039-4a3f99fdb92f",
+          "statusCode": 200,
+          "label": "Success",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"OK\",\n  \"data\": {\n    \"id\": \"user-1\",\n    \"name\": \"EL Zidane\",\n    \"avatarInitials\": \"EL\",\n    \"totalBalance\": 500000,\n    \"monthlyGrowth\": 2.4,\n    \"notificationCount\": 3\n  }\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "b4c5ea00-7a4f-49c5-8e7c-2eb91c05d3d5",
+      "type": "http",
+      "documentation": "PUT /profile — Update user profile",
+      "method": "put",
+      "endpoint": "profile",
+      "responses": [
+        {
+          "uuid": "c23b1043-9ff3-4f1c-bbc3-071e1d09a75f",
+          "statusCode": 200,
+          "label": "Updated",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Profil berhasil diperbarui\",\n  \"data\": {\n    \"id\": \"user-1\",\n    \"name\": \"El Zidane\",\n    \"avatarInitials\": \"AS\",\n    \"totalBalance\": 124592000,\n    \"monthlyGrowth\": 2.4,\n    \"notificationCount\": 3\n  }\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "729c43d5-7853-483e-87eb-78c2027d9b96",
+      "type": "http",
+      "documentation": "GET /accounts — List all accounts",
+      "method": "get",
+      "endpoint": "accounts",
+      "responses": [
+        {
+          "uuid": "108c033b-eef0-4262-8486-2e06c4f89f0f",
+          "statusCode": 200,
+          "label": "Success",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"OK\",\n  \"data\": [\n    {\"id\":\"acc-1\",\"name\":\"Tabungan BCA\",\"type\":\"savings\",\"balance\":2500000,\"lastFourDigits\":\"4429\"},\n    {\"id\":\"acc-2\",\"name\":\"Giro Mandiri\",\"type\":\"checking\",\"balance\":700000,\"lastFourDigits\":\"8810\"},\n    {\"id\":\"acc-3\",\"name\":\"Investasi Reksadana\",\"type\":\"investment\",\"balance\":6000000,\"lastFourDigits\":\"2201\"}\n  ]\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "65ab59e0-e62e-4a99-b70a-ba43d5f787ac",
+      "type": "http",
+      "documentation": "POST /accounts — Create new account",
+      "method": "post",
+      "endpoint": "accounts",
+      "responses": [
+        {
+          "uuid": "1129cd79-8406-42af-84e0-faa197950be6",
+          "statusCode": 201,
+          "label": "Created",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Akun berhasil ditambahkan\",\n  \"data\": {\n    \"id\": \"acc-new\",\n    \"name\": \"Rekening Baru\",\n    \"type\": \"savings\",\n    \"balance\": 0,\n    \"lastFourDigits\": \"0000\"\n  }\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "b997f076-9103-4b05-bf0b-b35a97e4c0a5",
+      "type": "http",
+      "documentation": "PUT /accounts/:id — Update account",
+      "method": "put",
+      "endpoint": "accounts/:id",
+      "responses": [
+        {
+          "uuid": "e87d4ca0-28cf-4a48-b3d1-126767471655",
+          "statusCode": 200,
+          "label": "Updated",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Akun berhasil diperbarui\",\n  \"data\": {\n    \"id\": \"acc-1\",\n    \"name\": \"Tabungan BCA\",\n    \"type\": \"savings\",\n    \"balance\": 500000,\n    \"lastFourDigits\": \"4429\"\n  }\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "6ec0aac3-287d-4df2-992a-07bae0493074",
+      "type": "http",
+      "documentation": "DELETE /accounts/:id — Delete account",
+      "method": "delete",
+      "endpoint": "accounts/:id",
+      "responses": [
+        {
+          "uuid": "4e81ab35-a996-4287-b357-b9ee92c807a0",
+          "statusCode": 200,
+          "label": "Deleted",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Akun berhasil dihapus\",\n  \"data\": null\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "d0fb86aa-c9bf-448c-97c5-0f5ab194b303",
+      "type": "http",
+      "documentation": "GET /savings-goals — List savings goals",
+      "method": "get",
+      "endpoint": "savings-goals",
+      "responses": [
+        {
+          "uuid": "8fd82ca3-93c0-448f-94ae-6ab277c75ee1",
+          "statusCode": 200,
+          "label": "Success",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"OK\",\n  \"data\": [\n    {\"id\":\"goal-1\",\"title\":\"New MacBook Pro\",\"targetAmount\":35000000,\"currentAmount\":12500000,\"icon\":\"laptop\",\"colorHex\":4280391162},\n    {\"id\":\"goal-2\",\"title\":\"Japan Trip 2025\",\"targetAmount\":50000000,\"currentAmount\":32000000,\"icon\":\"flight\",\"colorHex\":4278209921},\n    {\"id\":\"goal-3\",\"title\":\"Dana Darurat\",\"targetAmount\":100000000,\"currentAmount\":45000000,\"icon\":\"security\",\"colorHex\":4280253355}\n  ]\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "15b1961e-bf62-461f-999e-1c92d380da7e",
+      "type": "http",
+      "documentation": "POST /savings-goals — Create savings goal",
+      "method": "post",
+      "endpoint": "savings-goals",
+      "responses": [
+        {
+          "uuid": "ebd256a5-6282-4f38-ba17-c0f1f86a5abe",
+          "statusCode": 201,
+          "label": "Created",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Tujuan menabung berhasil dibuat\",\n  \"data\": {\n    \"id\": \"goal-new\",\n    \"title\": \"Tujuan Baru\",\n    \"targetAmount\": 10000000,\n    \"currentAmount\": 0,\n    \"icon\": \"savings\",\n    \"colorHex\": 4280391162\n  }\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "4a33acea-fc29-475a-809e-9050916d6ea4",
+      "type": "http",
+      "documentation": "PUT /savings-goals/:id — Update savings goal",
+      "method": "put",
+      "endpoint": "savings-goals/:id",
+      "responses": [
+        {
+          "uuid": "9eb59365-1b90-4abb-80b3-0a7dae8eb4d4",
+          "statusCode": 200,
+          "label": "Updated",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Tujuan menabung berhasil diperbarui\",\n  \"data\": {\n    \"id\": \"goal-1\",\n    \"title\": \"New MacBook Pro\",\n    \"targetAmount\": 35000000,\n    \"currentAmount\": 15000000,\n    \"icon\": \"laptop\",\n    \"colorHex\": 4280391162\n  }\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "1952e79b-0f62-46d5-9fce-49f836d83fc2",
+      "type": "http",
+      "documentation": "DELETE /savings-goals/:id — Delete savings goal",
+      "method": "delete",
+      "endpoint": "savings-goals/:id",
+      "responses": [
+        {
+          "uuid": "3e6b3b3c-fba4-4c04-b3a5-78de635856c2",
+          "statusCode": 200,
+          "label": "Deleted",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Tujuan menabung berhasil dihapus\",\n  \"data\": null\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "5f105acb-a488-4206-8d44-d51a7e1d38e0",
+      "type": "http",
+      "documentation": "GET /spending/summary?period=monthly|weekly",
+      "method": "get",
+      "endpoint": "spending/summary",
+      "responses": [
+        {
+          "uuid": "254b7249-9878-4f67-b9bb-4d91e41ba09a",
+          "statusCode": 200,
+          "label": "Success",
+          "bodyType": "INLINE",
+          "body": "{\n  \"success\": true,\n  \"message\": \"OK\",\n  \"data\": [\n    {\"label\":\"M1\",\"amount\":3200000,\"isHighlighted\":false},\n    {\"label\":\"M2\",\"amount\":4800000,\"isHighlighted\":false},\n    {\"label\":\"M3\",\"amount\":2500000,\"isHighlighted\":false},\n    {\"label\":\"M4\",\"amount\":6500000,\"isHighlighted\":true},\n    {\"label\":\"M5\",\"amount\":4200000,\"isHighlighted\":false},\n    {\"label\":\"M6\",\"amount\":5100000,\"isHighlighted\":false},\n    {\"label\":\"M7\",\"amount\":3800000,\"isHighlighted\":false}\n  ]\n}",
+          "headers": [],
+          "latency": 0,
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "e56e82f7-9663-475e-87db-7f5597f7a873",
+      "type": "crud",
+      "documentation": "",
+      "method": "",
+      "endpoint": "transactions",
+      "responses": [
+        {
+          "uuid": "c58e62cd-7299-4d0f-8359-4e78945e53a4",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "hpoz",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ]
+}
