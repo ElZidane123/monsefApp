@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
 import '../themes/app_themes.dart';
-import 'manual_entry_screen.dart';
+import 'voice_result_screen.dart';
 
 class VoiceNoteScreen extends StatefulWidget {
   const VoiceNoteScreen({super.key});
@@ -84,7 +84,6 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen>
       return;
     }
 
-    // Very basic parsing for demo: "Makan 50000"
     String lowerText = _text.toLowerCase();
     
     // Find numbers in text
@@ -94,30 +93,55 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen>
     double? amount;
     String title = _text;
     bool isExpense = true; // default
+    String category = '';
 
-    if (lowerText.contains('gaji') || lowerText.contains('dapat')) {
+    if (lowerText.contains('gaji') || lowerText.contains('dapat') || lowerText.contains('dikasih') || lowerText.contains('terima')) {
       isExpense = false;
     }
 
     if (match != null) {
       String numStr = match.group(0)!.replaceAll('.', '').replaceAll(',', '');
       amount = double.tryParse(numStr);
-      // If user says "50 ribu", we might need to multiply, but for demo let's assume they say exact or we leave it.
+      
+      // Auto multiplier for Indonesian slang
       if (lowerText.contains('ribu') && amount != null && amount < 1000) {
         amount *= 1000;
+      } else if (lowerText.contains('juta') && amount != null && amount < 1000) {
+        amount *= 1000000;
       }
       
       title = _text.substring(0, match.start).trim();
       if (title.isEmpty) title = 'Transaksi Suara';
+      
+      // Remove keywords like 'ribu' or 'juta' from title if they got left behind
+      title = title.replaceAll(RegExp(r'\s+(ribu|juta)$', caseSensitive: false), '').trim();
+    }
+
+    // Smart Category Auto-Detection
+    if (lowerText.contains('makan') || lowerText.contains('minum') || lowerText.contains('jajan') || lowerText.contains('kopi') || lowerText.contains('resto') || lowerText.contains('warteg')) {
+      category = 'Makanan';
+    } else if (lowerText.contains('bensin') || lowerText.contains('parkir') || lowerText.contains('ojol') || lowerText.contains('grab') || lowerText.contains('gojek') || lowerText.contains('kereta') || lowerText.contains('tol')) {
+      category = 'Transportasi';
+    } else if (lowerText.contains('belanja') || lowerText.contains('supermarket') || lowerText.contains('indomaret') || lowerText.contains('alfamart') || lowerText.contains('pasar')) {
+      category = 'Belanja';
+    } else if (lowerText.contains('nonton') || lowerText.contains('bioskop') || lowerText.contains('game') || lowerText.contains('main')) {
+      category = 'Hiburan';
+    } else if (lowerText.contains('gaji') || lowerText.contains('bonus')) {
+      category = 'Gaji';
+      isExpense = false;
+    } else if (lowerText.contains('transfer') || lowerText.contains('kirim uang')) {
+      category = 'Transfer';
     }
 
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => ManualEntryScreen(
-          initialTitle: title,
-          initialAmount: amount,
-          isExpense: isExpense,
+        builder: (_) => VoiceResultScreen(
+          parsedTitle: title,
+          parsedAmount: amount ?? 0.0,
+          initialIsExpense: isExpense,
+          initialCategory: category,
+          rawText: _text,
         ),
       ),
     );

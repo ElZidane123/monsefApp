@@ -38,7 +38,7 @@ class _FintechAppState extends State<FintechApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppController()..initializeData()),
+        ChangeNotifierProvider(create: (_) => AppController()..checkSession()),
       ],
       child: MaterialApp(
         title: 'Monsef',

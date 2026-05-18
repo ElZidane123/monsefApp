@@ -25,11 +25,17 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToHome() {
     Timer(const Duration(milliseconds: 3500), () {
       if (mounted) {
-        final isLoggedIn = context.read<AppController>().isLoggedIn;
-        Navigator.pushReplacementNamed(
-          context,
-          isLoggedIn ? AppRoutes.home : AppRoutes.login,
-        );
+        final appCtrl = context.read<AppController>();
+        if (appCtrl.isLoggedIn) {
+          final pin = appCtrl.user?.pin;
+          if (pin == null || pin.isEmpty) {
+            Navigator.pushReplacementNamed(context, AppRoutes.pinSetup);
+          } else {
+            Navigator.pushReplacementNamed(context, AppRoutes.pinLogin);
+          }
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.login);
+        }
       }
     });
   }

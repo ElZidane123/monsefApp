@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppController extends ChangeNotifier {
   final ApiService _api = ApiService();
@@ -31,6 +32,10 @@ class AppController extends ChangeNotifier {
     try {
       _user = await _api.login(email, password);
       _isLoggedIn = true;
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_logged_in', true);
+      
       await _loadDashboardData();
       return true;
     } catch (e) {
@@ -59,6 +64,10 @@ class AppController extends ChangeNotifier {
       };
       _user = await _api.register(data);
       _isLoggedIn = true;
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_logged_in', true);
+      
       await _loadDashboardData();
       return true;
     } catch (e) {
@@ -69,16 +78,47 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> logout() async {
     _isLoggedIn = false;
     _user = null;
     _transactions = [];
     _accounts = [];
     _savingsGoals = [];
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('is_logged_in');
+    await prefs.remove('user_pin');
+    
     notifyListeners();
   }
 
   // ─── Init / Refresh ──────────────────────────────────────────────────────
+  Future<bool> checkSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSession = prefs.getBool('is_logged_in') ?? false;
+    
+    if (hasSession) {
+      _isLoggedIn = true;
+      await initializeData();
+      
+      // Inject local PIN to override Mockoon's static response
+      final localPin = prefs.getString('user_pin');
+      if (localPin != null && _user != null) {
+        _user = UserModel(
+          name: _user!.name,
+          greeting: _user!.greeting,
+          avatarInitials: _user!.avatarInitials,
+          totalBalance: _user!.totalBalance,
+          monthlyGrowth: _user!.monthlyGrowth,
+          notificationCount: _user!.notificationCount,
+          pin: localPin,
+        );
+      }
+      
+      return true;
+    }
+    return false;
+  }
   Future<void> initializeData() async {
     if (!_isLoggedIn) return;
     _setLoading(true);
@@ -118,6 +158,7 @@ class AppController extends ChangeNotifier {
         totalBalance: _user?.totalBalance ?? updated.totalBalance, // keep local calculated balance
         monthlyGrowth: updated.monthlyGrowth,
         notificationCount: updated.notificationCount,
+        pin: data['pin'] ?? _user?.pin, // Ensure PIN is updated in local state
       );
       notifyListeners();
       return true;

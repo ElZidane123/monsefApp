@@ -8,6 +8,8 @@ import '../screen/profile_screen.dart';
 import '../screen/splash_screen.dart';
 import '../screen/login_screen.dart';
 import '../screen/register_screen.dart';
+import '../screen/pin_setup_screen.dart';
+import '../screen/pin_login_screen.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -20,6 +22,8 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String login = '/login';
   static const String register = '/register';
+  static const String pinSetup = '/pin-setup';
+  static const String pinLogin = '/pin-login';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -29,6 +33,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case pinSetup:
+        return MaterialPageRoute(builder: (_) => const PinSetupScreen());
+      case pinLogin:
+        return MaterialPageRoute(builder: (_) => const PinLoginScreen());
       case home:
       case dashboard:
         return MaterialPageRoute(builder: (_) => const HomeScreen());

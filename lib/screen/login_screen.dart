@@ -33,7 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      if (controller.user?.pin == null || controller.user!.pin!.isEmpty) {
+        Navigator.pushReplacementNamed(context, AppRoutes.pinSetup);
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
     } else if (mounted && controller.hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(controller.errorMessage ?? 'Gagal login', style: GoogleFonts.inter())),

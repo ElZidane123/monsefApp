@@ -7,6 +7,7 @@ class UserModel {
   final double totalBalance;
   final double monthlyGrowth;
   final int notificationCount;
+  final String? pin;
 
   const UserModel({
     required this.name,
@@ -15,6 +16,7 @@ class UserModel {
     required this.totalBalance,
     required this.monthlyGrowth,
     required this.notificationCount,
+    this.pin,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,7 @@ class UserModel {
       totalBalance: (json['totalBalance'] ?? 0).toDouble(),
       monthlyGrowth: (json['monthlyGrowth'] ?? 0).toDouble(),
       notificationCount: json['notificationCount'] ?? 0,
+      pin: json['pin'],
     );
   }
 }

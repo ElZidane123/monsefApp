@@ -118,7 +118,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         }
       }
       
-      _parseReceiptText(recognizedText.text);
+      _parseReceiptText(recognizedText);
 
     } catch (e) {
       debugPrint("Gagal scan error: $e");
@@ -186,7 +186,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         }
       }
 
-      _parseReceiptText(recognizedText.text);
+      _parseReceiptText(recognizedText);
     } catch (e) {
       debugPrint("Gallery scan error: $e");
       if (mounted) {
@@ -205,12 +205,65 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     }
   }
 
-  void _parseReceiptText(String text) {
-    debugPrint("=== TEKS HASIL SCAN ===");
-    debugPrint(text);
-    debugPrint("=======================");
+  void _parseReceiptText(RecognizedText recognizedText) {
+    debugPrint("=== MEMULAI PEMETAAN VISUAL OCR ===");
 
-    final lines = text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    // 1. REKONSTRUKSI VISUAL (Menggabungkan kata yang sejajar secara horizontal)
+    List<TextLine> allLines = [];
+    for (var block in recognizedText.blocks) {
+      for (var line in block.lines) {
+        allLines.add(line);
+      }
+    }
+
+    if (allLines.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak ada teks yang dapat diproses.')),
+        );
+      }
+      return;
+    }
+
+    // Urutkan dari atas ke bawah (berdasarkan koordinat Y)
+    allLines.sort((a, b) => a.boundingBox.top.compareTo(b.boundingBox.top));
+
+    // Kelompokkan kata-kata yang sejajar ke dalam baris yang sama
+    List<List<TextLine>> visualRows = [];
+    for (var line in allLines) {
+      if (visualRows.isEmpty) {
+        visualRows.add([line]);
+      } else {
+        var lastRow = visualRows.last;
+        double lastRowAvgY = lastRow.map((l) => l.boundingBox.top).reduce((a, b) => a + b) / lastRow.length;
+        
+        // Toleransi sejajar, ambil setengah dari tinggi font
+        double threshold = line.boundingBox.height / 2;
+        if (threshold < 10) threshold = 10;
+        
+        if ((line.boundingBox.top - lastRowAvgY).abs() < threshold) {
+          lastRow.add(line);
+        } else {
+          visualRows.add([line]);
+        }
+      }
+    }
+
+    // Urutkan kata dari kiri ke kanan (berdasarkan koordinat X) dalam setiap baris
+    for (var row in visualRows) {
+      row.sort((a, b) => a.boundingBox.left.compareTo(b.boundingBox.left));
+    }
+
+    // Gabungkan menjadi teks baris demi baris
+    List<String> lines = visualRows.map((row) {
+      return row.map((l) => l.text).join(' ').trim();
+    }).toList();
+
+    debugPrint("=== TEKS REKONSTRUKSI VISUAL ===");
+    for (var l in lines) {
+      debugPrint(l);
+    }
+    debugPrint("=================================");
     
     double finalAmount = 0.0;
     String title = "Struk Belanja";
@@ -221,30 +274,50 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       final ignoreKeywords = [
         'jl.', 'jalan', 'telp', '08', 'date', 'tanggal', 'npwp', 'receipt', 'faktur', 
         'inv', 'no.', 'order', 'table', 'kasir', 'cashier', 'server', 'check', 'pajak', 
-        'tax', 'time', 'jam', 'pindah', 'meja', 'antrian', 'qris'
+        'tax', 'time', 'jam', 'pindah', 'meja', 'antrian', 'qris', 'merchant'
       ];
 
-      for (var i = 0; i < lines.length && i < 12; i++) {
-        final line = lines[i];
+      for (var i = 0; i < lines.length && i < 15; i++) {
+        final line = lines[i].trim();
         final lower = line.toLowerCase();
         
+        bool isAddressLine = lower.contains('jl.') || 
+                             lower.contains('jalan ') || 
+                             lower.contains('jakarta') ||
+                             lower.contains('raya') ||
+                             (lower.contains(',') && line.length > 15);
+
         bool shouldIgnore = ignoreKeywords.any((k) => lower.contains(k)) || 
                            lower.contains(':') || 
                            lower.contains('=') ||
-                           line.length < 3 ||
-                           RegExp(r'^\d+$').hasMatch(line) ||
-                           RegExp(r'\d{2}/\d{2}').hasMatch(line);
+                           line.length <= 3 ||
+                           RegExp(r'^\d+$').hasMatch(line) || // only numbers
+                           RegExp(r'\d{2,}[./-]\d{2,}').hasMatch(line) || // dates
+                           RegExp(r'\d{2,}:\d{2,}').hasMatch(line) || // times
+                           isAddressLine;
 
         if (!shouldIgnore) {
-          // If we find a line in All Caps, it's very likely the merchant name
-          if (line == line.toUpperCase() && RegExp(r'[A-Z]').hasMatch(line)) {
-            title = line;
-            break;
+          title = line;
+          
+          // Optionally, grab the next line if it's short and doesn't look like another field
+          // For example, combining "Meatsmith" and "Steakhouse"
+          if (i + 1 < lines.length) {
+            final nextLine = lines[i + 1].trim();
+            final nextLower = nextLine.toLowerCase();
+            bool nextIgnore = ignoreKeywords.any((k) => nextLower.contains(k)) || 
+                              nextLine.contains(':') || 
+                              nextLine.contains('=') ||
+                              nextLine.length > 25 ||
+                              RegExp(r'\d').hasMatch(nextLine) ||
+                              nextLine.contains(',') ||
+                              nextLower.contains('jl.') ||
+                              nextLower.contains('jalan');
+            if (!nextIgnore && nextLine.isNotEmpty) {
+              title += " $nextLine";
+            }
           }
-          // Fallback to the first non-ignored line
-          if (title == "Struk Belanja") {
-            title = line;
-          }
+          
+          break; // Stop immediately at the first valid line
         }
       }
     }
@@ -269,13 +342,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         currentRank = 0;
       }
 
-      if (currentRank >= bestRank) {
+      if (currentRank >= bestRank && currentRank != -1) {
         // Try to find a number in this line
         double? val = _extractPrice(line);
         
-        // If not on same line, look up to 2 lines below
+        // If not on same line, look up to 3 lines below
         if (val == null || val < 100) {
-          for (int j = 1; j <= 2; j++) {
+          for (int j = 1; j <= 3; j++) {
             if (i + j < lines.length) {
               val = _extractPrice(lines[i + j]);
               if (val != null && val > 100) break;
@@ -300,7 +373,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         final val = _extractPrice(line);
         if (val != null) {
           bool isYear = val >= 2020 && val <= 2030;
-          bool isTooLarge = val > 20000000; // Filter out phone numbers
+          bool isTooLarge = val > 50000000; // Filter out very long numbers
           bool isDatePattern = RegExp(r'\b\d{2}[./-]\d{2}[./-]\d{2,4}\b').hasMatch(line);
           bool isTimePattern = RegExp(r'\b\d{1,2}:\d{2}\b').hasMatch(line);
 
@@ -328,28 +401,33 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         builder: (_) => ScanResultScreen(
           scannedTitle: title,
           scannedAmount: finalAmount,
-          rawText: text,
+          rawText: recognizedText.text,
         ),
       ),
     );
   }
 
   double? _extractPrice(String input) {
-    // 1. CHARACTER CORRECTION (Handle common OCR errors)
-    // e.g., "TotaI" -> "Total", "Rp. S0.000" -> "Rp. 50.000"
-    String corrected = input.toLowerCase()
-        .replaceAll('rp', '')
-        .replaceAll('idr', '')
-        .replaceAll(':', '')
-        .replaceAll('=', '')
-        .replaceAll('s', '5') // S often read as 5 in prices
-        .replaceAll('o', '0') // O often read as 0
-        .replaceAll('i', '1') // I/l often read as 1
-        .replaceAll('l', '1');
+    // 1. SAFE PRE-CLEANING
+    // Hapus kata-kata kunci struk agar saat hurufnya di-replace jadi angka (misal 't0tal')
+    // tidak menempel dengan angka aslinya (misal 't0ta13.000.000' dari 'total 3.000.000').
+    String clean = input.toLowerCase()
+        .replaceAll(RegExp(r'total|subtotal|jumlah|tagihan|tunai|cash|bayar|kembali|tax|pajak|nett|rp|idr'), ' ')
+        .replaceAll(':', ' ')
+        .replaceAll('=', ' ');
     
-    // 2. Regex for various price formats
+    // 2. CHARACTER CORRECTION
+    // Ganti huruf yang mirip angka karena salah baca OCR
+    clean = clean
+        .replaceAll('s', '5')
+        .replaceAll('o', '0')
+        .replaceAll('i', '1')
+        .replaceAll('l', '1')
+        .replaceAll(' ', ''); // Hapus semua spasi HANYA setelah filter kata aman
+    
+    // 3. REGEX FOR VARIOUS PRICE FORMATS
     final priceRegex = RegExp(r'\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{2})?|\b\d{4,}\b');
-    final matches = priceRegex.allMatches(corrected);
+    final matches = priceRegex.allMatches(clean);
     
     double? bestMatch;
     
